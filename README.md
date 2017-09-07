@@ -1,2 +1,2 @@
-# vue-project
-vue-project
+# vue-music
+vue-music
