@@ -27,12 +27,24 @@ export default {
 }
 </script>
 <style>
-.clearfix:{zoom:1;}
+*{padding:0;margin:0;}
+ul{list-style-type:none;}
+.clearfix{zoom:1;}
 .clearfix:after{content:".";display:block;height:0;clear:both;}
 .center{
   position:fixed;
   top:50%;left:50%;
   -webkit-transform:translate(-50%,-50%);
+}
+html,body{
+  width:100%;
+  height:100%;
+}
+html{
+  font-size:20px;
+}
+body{
+  font-size:0.6rem;
 }
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;

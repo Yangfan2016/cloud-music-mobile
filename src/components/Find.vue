@@ -18,7 +18,7 @@
             <div class="playlist clearfix">
                 <!-- loading -->
                 <mu-circular-progress class="center" :size="40" :strokeWidth="3" color="#f20" v-show="isLoading" />
-                <div class="playlist_item" v-for="playlist in playlistArr" v-bind:key="playlist.id" v-on:click="getDetailPlayList(playlist.id)">  
+                <div class="playlist_item" v-for="playlist in playlistArr" v-bind:key="playlist.id" v-on:click="linkToDetail(playlist.id)">  
                     <img v-bind:src="playlist.coverImgUrl" alt="" style="width:100%;height:auto;" />
                     <div class="playlist-title" v-text="playlist.name"></div>
                 </div>
@@ -39,8 +39,7 @@
 	</div>
 </template>
 <script type="text/javascript">
-import Swiper from './Swiper'
-import api from '../api/index.js'
+import Swiper from '../plugins/Swiper'
 export default {
 	name:"home",
 	data:function () {
@@ -59,9 +58,8 @@ export default {
         },
         getHotPlayList:function () {
             this.isLoading=true;
-            this.$http.get(api.getPlayListByWhere("全部",0,9))
+            this.$http.get(this.$api.getPlayListByWhere("全部",0,9))
             .then(res=>{
-                console.log(res);
                 this.playlistArr=res.data.playlists;
                 this.refreshing = false;
                 this.isLoading=false;
@@ -73,15 +71,12 @@ export default {
                 this.isLoading=false;
             });
         },
-        getDetailPlayList:function (id) {
-            this.$http.get(api.getPlayListDetail(id))
-            .then(res=>{
-                console.log(res);
-                
-            })
-            .catch(err=>{
-                console.error('Error: '+err);
-                this.isOpen=true;
+        linkToDetail:function (id) {
+            this.$router.push({
+                name:"DetailPlaylist",
+                query:{
+                    id,
+                }
             });
         },
         refresh:function () {
@@ -95,7 +90,7 @@ export default {
         }
 	},
 	components:{
-		'swiper-box':Swiper
+        'swiper-box':Swiper,
 	},
     mounted:function () {
         var _vm=this;

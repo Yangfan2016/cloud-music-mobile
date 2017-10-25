@@ -7,6 +7,9 @@ import router from './router'
 // ajax
 import axios from 'axios'
 
+// api
+import api from './api/index.js'
+
 // Muse-UI
 import MuseUI from 'muse-ui'    // js
 import 'muse-ui/dist/muse-ui.css'  // css
@@ -21,6 +24,7 @@ Vue.use(MuseUI);   // 加载MuseUI插件
 Vue.use(VueAwesomeSwiper); // 加载 VueAwesomeSwiper轮播图插件
 
 Vue.prototype.$http = axios;
+Vue.prototype.$api=api;
 
 /* eslint-disable no-new */
 var vm=new Vue({
