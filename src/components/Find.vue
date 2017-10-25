@@ -124,8 +124,9 @@ export default {
 }
 .playlist_item{
     float:left;
-    width:30%;
+    width:29.99999%;
     margin:0 0 2.5% 2.5%;
+    overflow: hidden;
 }
 .playlist-title{
     height: 38px;
