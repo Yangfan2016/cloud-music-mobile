@@ -1,14 +1,14 @@
 <template>
     <div class="details">
         <mu-appbar class="appbar" v-bind:zDepth="0" title="歌单">
-            <mu-icon-button icon="chevron_left" slot="left" to="/" />
+            <mu-icon-button icon="chevron_left" slot="left" v-on:click="closeList" />
         </mu-appbar>
         <div class="coverbox">
             <div class="cover_user">
                 <div class="user_pic"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:auto;"></div>
                 <div class="user_info">
                     <div v-text="playList.name"></div>
-                    <div v-text="playList.creator.nickname"></div>
+                    <div v-text="playList.creator && playList.creator.nickname"></div>
                 </div>
             </div>
             <div class="cover_bg"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:100%;"></div>
@@ -35,43 +35,41 @@
 <script>
 export default {
     name:"details",
+    props:["playList","songList"],
     data:function () {
         return {
-            playList:{},
-            songList:[]
+            
         };
     },
     methods:{
-        getDetailPlayList:function (id) {
-            var that=this;
-            that.$http.get(that.$api.getPlayListDetail(id))
-            .then(res=>{
-                console.log(res);
-                let data=res.data;
-                that.playList=data.playlist;
-                that.songList=that.playList.tracks;
-            })
-            .catch(err=>{
-                console.error('Error: '+err);
-            });
-        },
+        closeList:function () {
+            this.$emit("close-list");
+        }
     },
     mounted:function () {
         var that=this;
-        that.$nextTick(function () {
-            var playListID=that.$router.currentRoute.query.id;
-            that.getDetailPlayList(playListID);
-        });
     }
 }
 </script>
 <style scoped>
+.details{
+    position: absolute;
+    top:-56px;
+    width:100%;
+    min-height: 100vh;
+    z-index:10;
+    background-color: #fff;
+}
+.mu-appbar{
+    background-color: rgba(0,0,0,0.15);
+}
 .coverbox{
     position: relative;
-    padding: 10px 0;
+    padding: 60px 0 20px 0;
     overflow: hidden;
 }
 .cover_user{
+    display: -webkit-flex;
     display: flex;
     padding:30px 20px 0 20px;
 }
@@ -79,6 +77,7 @@ export default {
     flex-basis: 150px;
 }
 .user_info{
+    flex-basis:220px;
     padding:10px 15px;
     text-align:left;
     font-size: 0.8rem;

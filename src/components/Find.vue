@@ -1,55 +1,69 @@
 <template>
     <div class="find">
-        <mu-dialog :open="isOpen" title="Dialog" @close="close">
-            <p>加载失败！</p>
-            <mu-flat-button slot="actions" primary @click="close" label="确定"/>
-        </mu-dialog>
-        <mu-refresh-control :refreshing="refreshing" :trigger="trigger" @refresh="refresh"/>
-        <mu-tabs v-bind:value="activeTab" v-on:change="handleTabChange">
-            <mu-tab value="tab1" title="个性推荐"/>
-            <mu-tab value="tab2" title="歌单"/>
-            <mu-tab value="tab3" title="主播电台"/>
-            <mu-tab value="tab4" title="排行榜"/>
-        </mu-tabs>
-        <div v-if="activeTab === 'tab1'">
-    		<!-- 轮播图 -->
-    		<swiper-box></swiper-box>
-            <!-- 推荐歌单 -->
-            <div class="playlist clearfix">
-                <!-- loading -->
-                <mu-circular-progress class="center" :size="40" :strokeWidth="3" color="#f20" v-show="isLoading" />
-                <div class="playlist_item" v-for="playlist in playlistArr" v-bind:key="playlist.id" v-on:click="linkToDetail(playlist.id)">  
-                    <img v-bind:src="playlist.coverImgUrl" alt="" style="width:100%;height:auto;" />
-                    <div class="playlist-title" v-text="playlist.name"></div>
+        <div class="find_index" ref="findIndex">
+            <mu-dialog :open="isOpen" title="Dialog" @close="close">
+                <p>加载失败！</p>
+                <mu-flat-button slot="actions" primary @click="close" label="确定"/>
+            </mu-dialog>
+            <mu-refresh-control :refreshing="refreshing" :trigger="trigger" @refresh="refresh"/>
+            <mu-tabs v-bind:value="activeTab" v-on:change="handleTabChange">
+                <mu-tab value="tab1" title="个性推荐"/>
+                <mu-tab value="tab2" title="歌单"/>
+                <mu-tab value="tab3" title="主播电台"/>
+                <mu-tab value="tab4" title="排行榜"/>
+            </mu-tabs>
+            <div v-if="activeTab === 'tab1'">
+                <!-- 轮播图 -->
+                <swiper-box></swiper-box>
+                <!-- 推荐歌单 -->
+                <div class="playlist clearfix">
+                    <!-- loading -->
+                    <mu-circular-progress class="center" :size="40" :strokeWidth="3" color="#f20" v-show="isLoading" />
+                    <div class="playlist_item" v-for="playlist in playlistArr" v-bind:key="playlist.id" v-on:click="openSingList(playlist.id)">  
+                        <img v-bind:src="playlist.coverImgUrl" alt="" style="width:100%;height:auto;" />
+                        <div class="playlist-title" v-text="playlist.name"></div>
+                    </div>
                 </div>
             </div>
+            <div v-if="activeTab === 'tab2'">
+                <h2>Tab One</h2>
+                <p>这是第二个 tab</p>
+            </div>
+            <div v-if="activeTab === 'tab3'">
+                <h2>Tab One</h2>
+                <p>这是第三个 tab</p>
+            </div>
+            <div v-if="activeTab === 'tab4'">
+                <h2>Tab One</h2>
+                <p>这是第四个 tab</p>
+            </div>
         </div>
-        <div v-if="activeTab === 'tab2'">
-            <h2>Tab One</h2>
-            <p>这是第二个 tab</p>
-        </div>
-        <div v-if="activeTab === 'tab3'">
-            <h2>Tab One</h2>
-            <p>这是第三个 tab</p>
-        </div>
-        <div v-if="activeTab === 'tab4'">
-            <h2>Tab One</h2>
-            <p>这是第四个 tab</p>
-        </div>
+        
+        <!-- 歌单详情页 -->
+        <transition name="slide-left">
+            <Sing-list v-show="isOpenSingList" v-bind="{
+                playList:p_playList,
+                songList:p_songList
+            }" v-on:close-list="closeSingList"></Sing-list>
+        </transition>
 	</div>
 </template>
 <script type="text/javascript">
 import Swiper from '../plugins/Swiper'
+import DetailPlaylist from "./DetailPlaylist.vue"
 export default {
 	name:"home",
 	data:function () {
 		return {
 			activeTab:"tab1",
             playlistArr:[],
+            p_playList:{},
+            p_songList:[],
             refreshing:false,
             trigger:null,
             isLoading:false,
-            isOpen:false
+            isOpen:false,
+            isOpenSingList:false,
 		};
 	},
 	methods:{
@@ -71,13 +85,27 @@ export default {
                 this.isLoading=false;
             });
         },
-        linkToDetail:function (id) {
-            this.$router.push({
-                name:"DetailPlaylist",
-                query:{
-                    id,
-                }
-            });
+        getDetailPlayList:function (id) {
+            var that=this;
+            that.$http.get(that.$api.getPlayListDetail(id))
+                .then(res=>{
+                    console.log(res);
+                    let data=res.data;
+                    that.p_playList=data.playlist;
+                    that.p_songList=that.p_playList.tracks;
+                })
+                .catch(err=>{
+                    console.error('Error: '+err);
+                });
+        },
+        openSingList:function (id) {
+            var that=this;
+            that.isOpenSingList=true;
+            that.getDetailPlayList(id);
+        },
+        closeSingList:function () {
+            var that=this;
+            that.isOpenSingList=false;
         },
         refresh:function () {
             this.refreshing = true;
@@ -91,12 +119,13 @@ export default {
 	},
 	components:{
         'swiper-box':Swiper,
+        "Sing-list":DetailPlaylist
 	},
     mounted:function () {
-        var _vm=this;
-        _vm.$nextTick(function () {
-            _vm.trigger=_vm.$el;
-            _vm.getHotPlayList();
+        var that=this;
+        that.$nextTick(function () {
+            that.trigger=that.$refs["findIndex"];
+            that.getHotPlayList();
         });
     }
 }
