@@ -21,9 +21,9 @@
                 </div> 
             </div>
             <ul class="songlist">
-                <li class="listitem" v-for="(item,index) in songList" v-bind:key="index">
+                <li class="listitem" v-bind:class="{active:item.id==curSong.id}" v-for="(item,index) in songList" v-bind:key="index">
                     <div class="l-no" v-text="index+1"></div>
-                    <div class="r-item">
+                    <div class="r-item" v-on:click="playSong(item)">
                         <span class="songname" v-text="item.name"></span>
                         <p class="songinfo"><span v-text="item.ar[0].name"></span>-<span v-text="item.al.name"></span></p>
                     </div> 
@@ -38,12 +38,20 @@ export default {
     props:["playList","songList"],
     data:function () {
         return {
-            
+            curSong:{id:-1}
         };
     },
     methods:{
         closeList:function () {
             this.$emit("close-list");
+        },
+        playSong:function (item) {
+            this.curSong={id:item.id};
+            
+            if (localStorage.getItem(item.id)==null) {
+                localStorage.setItem("curSong",JSON.stringify(item));
+            }
+            this.$emit("play-song");
         }
     },
     mounted:function () {
@@ -57,6 +65,7 @@ export default {
     top:-56px;
     width:100%;
     min-height: 100vh;
+    padding:0 0 70px 0;
     z-index:10;
     background-color: #fff;
 }
@@ -95,6 +104,9 @@ export default {
 }
 .listBox{
     background-color: #fff;
+}
+.listitem.active{
+    color:#cc2005;
 }
 .listitem,
 .playbar{

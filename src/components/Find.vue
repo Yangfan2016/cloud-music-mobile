@@ -44,7 +44,7 @@
             <Sing-list v-show="isOpenSingList" v-bind="{
                 playList:p_playList,
                 songList:p_songList
-            }" v-on:close-list="closeSingList"></Sing-list>
+            }" v-on:close-list="closeSingList" v-on:play-song="playThisSong"></Sing-list>
         </transition>
 	</div>
 </template>
@@ -87,16 +87,25 @@ export default {
         },
         getDetailPlayList:function (id) {
             var that=this;
-            that.$http.get(that.$api.getPlayListDetail(id))
+
+            if (localStorage.getItem("playlist-"+id)==null) {
+                console.log("在线获取歌单");
+                that.$http.get(that.$api.getPlayListDetail(id))
                 .then(res=>{
-                    console.log(res);
                     let data=res.data;
                     that.p_playList=data.playlist;
                     that.p_songList=that.p_playList.tracks;
+                    // save
+                    localStorage.setItem("playlist-"+id,JSON.stringify(data.playlist));
                 })
                 .catch(err=>{
                     console.error('Error: '+err);
                 });
+            } else {
+                console.log("本地获取歌单");
+                that.p_playList=JSON.parse(localStorage.getItem("playlist-"+id));
+                that.p_songList=that.p_playList.tracks;
+            }
         },
         openSingList:function (id) {
             var that=this;
@@ -115,6 +124,9 @@ export default {
         },
         close:function () {
             this.isOpen=false;
+        },
+        playThisSong:function () {
+            this.$emit("play-song",arguments);
         }
 	},
 	components:{
