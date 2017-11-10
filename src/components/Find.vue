@@ -43,8 +43,9 @@
         <transition name="slide-left">
             <Sing-list v-show="isOpenSingList" v-bind="{
                 playList:p_playList,
-                songList:p_songList
-            }" v-on:close-list="closeSingList" v-on:play-song="playThisSong"></Sing-list>
+                songList:p_songList,
+                curMusic:curSong
+            }" v-on:close-list="closeSingList"></Sing-list>
         </transition>
 	</div>
 </template>
@@ -53,6 +54,7 @@ import Swiper from '../plugins/Swiper'
 import DetailPlaylist from "./DetailPlaylist.vue"
 export default {
 	name:"home",
+    props:["curSong"],
 	data:function () {
 		return {
 			activeTab:"tab1",
@@ -97,6 +99,8 @@ export default {
                     that.p_songList=that.p_playList.tracks;
                     // save
                     localStorage.setItem("playlist-"+id,JSON.stringify(data.playlist));
+                    // push data in musiclist
+                    that.$emit("push-list",data.playlist);
                 })
                 .catch(err=>{
                     console.error('Error: '+err);
@@ -105,6 +109,8 @@ export default {
                 console.log("本地获取歌单");
                 that.p_playList=JSON.parse(localStorage.getItem("playlist-"+id));
                 that.p_songList=that.p_playList.tracks;
+                // push data in musiclist
+                that.$emit("push-list",that.p_playList);
             }
         },
         openSingList:function (id) {
@@ -125,9 +131,6 @@ export default {
         close:function () {
             this.isOpen=false;
         },
-        playThisSong:function () {
-            this.$emit("play-song",arguments);
-        }
 	},
 	components:{
         'swiper-box':Swiper,
@@ -146,37 +149,42 @@ export default {
 </script>
 <style scoped>
 .find{
-    position:relative;
+    padding:0 0 80px 0;
 }
 .demo-flat-button{
-  padding:12px 0;
+    padding:12px 0;
 }
 .mu-tabs{
-  background-color:#fff;
+    background-color:#fff;
 }
 .mu-tab-link{
-  min-height:0;
-  padding-top:8px;
-  padding-bottom:8px;
-  color:#666;
+    min-height:0;
+    padding-top:8px;
+    padding-bottom:8px;
+    color:#666;
 }
 .mu-tab-active{
-  color:#f00;
+    color:#f00;
+}
+.playlist{
+    display: flex;
+    flex-wrap: wrap;
 }
 .playlist_item{
     float:left;
-    width:29.99999%;
-    margin:0 0 2.5% 2.5%;
+    flex-basis:30%;
+    margin:5px 0 0 2.5%;
     overflow: hidden;
 }
 .playlist-title{
-    height: 38px;
-    word-wrap: break-word;
+    max-height: 38px;
+    /* mline overflow */
     overflow: hidden;
     display: -webkit-box;
     text-overflow: ellipsis;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
+
     font-size: 12px;
     color: #333;
     line-height: 1.5;

@@ -1,72 +1,84 @@
 <template>
     <div class="details">
-        <mu-appbar class="appbar" v-bind:zDepth="0" title="歌单">
-            <mu-icon-button icon="chevron_left" slot="left" v-on:click="closeList" />
-        </mu-appbar>
-        <div class="coverbox">
-            <div class="cover_user">
-                <div class="user_pic"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:auto;"></div>
-                <div class="user_info">
-                    <div v-text="playList.name"></div>
-                    <div v-text="playList.creator && playList.creator.nickname"></div>
+        <div class="d_content">
+            <mu-appbar class="appbar" v-bind:zDepth="0" title="歌单">
+                <mu-icon-button icon="chevron_left" slot="left" v-on:click="closeList" />
+            </mu-appbar>
+            <div class="coverbox">
+                <div class="cover_user">
+                    <div class="user_pic"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:auto;"></div>
+                    <div class="user_info">
+                        <div v-text="playList.name"></div>
+                        <div v-text="playList.creator && playList.creator.nickname"></div>
+                    </div>
                 </div>
+                <div class="cover_bg"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:100%;"></div>
             </div>
-            <div class="cover_bg"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:100%;"></div>
-        </div>
-        <div class="listbox">
-            <div class="playbar">
-                <mu-icon-button icon="play_circle_outline" size="24" class="l-no play_btn"></mu-icon-button>
-                <div class="r-item play_text">
-                    <p>播放全部<span class="text_count">（共{{songList.length}}首）</span></p>
-                </div> 
-            </div>
-            <ul class="songlist">
-                <li class="listitem" v-bind:class="{active:item.id==curSong.id}" v-for="(item,index) in songList" v-bind:key="index">
-                    <div class="l-no" v-text="index+1"></div>
-                    <div class="r-item" v-on:click="playSong(item)">
-                        <span class="songname" v-text="item.name"></span>
-                        <p class="songinfo"><span v-text="item.ar[0].name"></span>-<span v-text="item.al.name"></span></p>
+            <div class="listbox">
+                <div class="playbar">
+                    <mu-icon-button icon="play_circle_outline" size="24" class="l-no play_btn"></mu-icon-button>
+                    <div class="r-item play_text">
+                        <p>播放全部<span class="text_count">（共{{songList.length}}首）</span></p>
                     </div> 
-                </li>
-            </ul>
+                </div>
+                <ul class="songlist">
+                    <li class="listitem" v-bind:class="{active:item.id==curSong.id}" v-for="(item,index) in songList" v-bind:key="index">
+                        <div class="l-no">
+                            <mu-icon-button v-if="item.id==curSong.id" icon="volume_up" />
+                            <span v-else v-text="index+1"></span>
+                        </div>
+                        <div class="r-item" v-on:click.stop="playSong(item,index)">
+                            <span class="songname" v-text="item.name"></span>
+                            <p class="songinfo"><span v-text="item.ar[0].name"></span>-<span v-text="item.al.name"></span></p>
+                        </div> 
+                    </li>
+                </ul>
+            </div>
         </div>
     </div>
 </template>
 <script>
 export default {
     name:"details",
-    props:["playList","songList"],
+    props:["playList","songList","curMusic"],
     data:function () {
         return {
-            curSong:{id:-1}
+            curSong:this.curMusic
         };
     },
     methods:{
         closeList:function () {
             this.$emit("close-list");
         },
-        playSong:function (item) {
+        playSong:function (item,index) {
             this.curSong={id:item.id};
-            
-            if (localStorage.getItem(item.id)==null) {
-                localStorage.setItem("curSong",JSON.stringify(item));
-            }
-            this.$emit("play-song");
+            item._index=index;
+            // save cursong data
+            localStorage.setItem("curSong",JSON.stringify(item));
+            // emit parent play current music
+            bus.$emit("curmusicchange",index);
         }
     },
     mounted:function () {
         var that=this;
+
+        bus.$on("playlistchange",function (song) {
+            that.curSong.id=song.id;
+        });
     }
 }
 </script>
 <style scoped>
 .details{
-    position: absolute;
-    top:-56px;
+    position: fixed;
+    top:0;
+    left:0;
     width:100%;
-    min-height: 100vh;
+    height: 100vh;
     padding:0 0 70px 0;
     z-index:10;
+    overflow-y: auto;
+    overflow-x: hidden;
     background-color: #fff;
 }
 .mu-appbar{
@@ -86,8 +98,9 @@ export default {
     flex-basis: 150px;
 }
 .user_info{
-    flex-basis:220px;
+    max-width:50%;
     padding:10px 15px;
+    overflow: hidden;
     text-align:left;
     font-size: 0.8rem;
     color:#fff;

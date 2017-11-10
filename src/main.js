@@ -26,12 +26,14 @@ Vue.use(VueAwesomeSwiper); // 加载 VueAwesomeSwiper轮播图插件
 Vue.prototype.$http = axios;
 Vue.prototype.$api=api;
 
+// Event bus
+window.bus=new Vue();
+
 /* eslint-disable no-new */
-var vm=new Vue({
+var app=new Vue({
   el: '#app',
   router,
   template: '<App/>',
   components: { App }
 });
-
 

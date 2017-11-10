@@ -9,19 +9,23 @@
             <div class="disc_circle_inner" v-bind:style="{'background-image':'url('+curMusic.posterUrl+')'}"></div>
         </div>
         <div class="btngroup">
-            <mu-icon-button iconClass="btn" icon="shuffle" />
-            <mu-icon-button iconClass="btn" icon="skip_previous" />
-            <mu-icon-button iconClass="btn" icon="play_circle_outline" v-if="!isPlaySong" v-on:click="playMusic(true)" />
-            <mu-icon-button iconClass="btn" icon="pause_circle_outline" v-if="isPlaySong" v-on:click="playMusic(false)" />
-            <mu-icon-button iconClass="btn" icon="skip_next" />
-            <mu-icon-button iconClass="btn" icon="list" />                        
+            <span style="display:inline-block;" v-on:click.stop="changePlaySongMode">
+                <mu-icon-button v-if="playSongMode=='list_repeat'" class="" icon="repeat" />
+                <mu-icon-button v-if="playSongMode=='sing_repeat'" class="" icon="repeat_one" />
+                <mu-icon-button v-if="playSongMode=='random'"  class="" icon="shuffle" />
+            </span>
+            <mu-icon-button iconClass="btn" icon="skip_previous" v-on:click.stop="playNextOrPrev(-1)" />
+            <mu-icon-button iconClass="btn" icon="play_circle_outline" v-if="!isPlaySong" v-on:click.stop="playMusic(true)" />
+            <mu-icon-button iconClass="btn" icon="pause_circle_outline" v-if="isPlaySong" v-on:click.stop="playMusic(false)" />
+            <mu-icon-button iconClass="btn" icon="skip_next" v-on:click.stop="playNextOrPrev(1)" />
+            <mu-icon-button iconClass="btn" icon="list" v-on:click.stop="$emit('open-popbox')" />                        
         </div>
     </div>
 </template>
 <script>
 export default {
     name:"playpage",
-    props:["curSong","isPlaySong","isCanPlaySong"],
+    props:["curSong","isPlaySong","isCanPlaySong","playSongMode"],
     data:function () {
         return {
             musicDisc:null,
@@ -54,6 +58,12 @@ export default {
         rotateDisc:function (boo) {
             var that=this;
             that.musicDisc.style.webkitAnimationPlayState=boo?"running":"paused";
+        },
+        playNextOrPrev:function (flag) {
+            bus.$emit("play-next-music",flag);
+        },
+        changePlaySongMode:function () {
+            bus.$emit("change-play-mode");
         }
     },
     mounted:function () {

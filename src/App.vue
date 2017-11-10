@@ -8,10 +8,12 @@
 			<mu-icon-button icon="search" slot="right"/>
 		</mu-appbar>
 		<transition name="slide-left" mode="out-in">
-			<router-view class="view" v-on:play-song="playThisSong"></router-view>      
+			<router-view class="view" v-on:push-list="addMusicList" v-bind="{
+				curSong:curMusic
+			}"></router-view>      
 		</transition>
 		<!-- 播放条 -->
-		<div class="musicbar" v-on:click="openMusicBox">
+		<div class="musicbar" v-if="isShowMusicBar" v-on:click="openMusicBox">
 			<div class="music_poster">
 				<div class="poster_pic">
 					<img v-bind:src="curMusic.posterUrl" alt="Vue" style="width:100%;height:100%;" />
@@ -24,7 +26,7 @@
 			<div class="music_btn">
 				<mu-icon-button icon="play_circle_outline" v-if="!isPlay" v-on:click.stop="startPlay" />
 				<mu-icon-button icon="paused_circle_outline" v-if="isPlay" v-on:click.stop="stopPlay" />
-				<mu-icon-button icon="playlist_play" />
+				<mu-icon-button icon="playlist_play" v-on:click.stop="isOpenPlayListBox=true" />
 			</div>
 		</div>
 		<!-- 播放器 -->
@@ -32,9 +34,28 @@
 			<music-play v-show="isOpenMusicPage" v-bind="{
 				curSong:curMusic,
 				isCanPlaySong:isCanPlay,
-				isPlaySong:isPlay
-			}" v-on:close-box="closeMusicBox" v-on:change-status="changePlayStatus"></music-play>
+				isPlaySong:isPlay,
+				playSongMode:playMode
+			}" v-on:close-box="closeMusicBox" v-on:change-status="changePlayStatus" v-on:open-popbox="isOpenPlayListBox=true"></music-play>
 		</transition>
+		<!-- pop playlist -->
+		<mu-popup position="bottom" v-bind:overlay="true" popupClass="popup-bottom-playlist" v-bind:open="isOpenPlayListBox" v-on:close="isOpenPlayListBox=false">
+			<ul class="popup-song-detail">
+				<li class="song_btngroup">
+					<span style="display:inline-block;" v-on:click="changePlayMode">
+						<mu-flat-button v-if="playMode=='list_repeat'" v-bind:label="'列表循环 ('+musicList.length+')'" class="" icon="repeat" />
+						<mu-flat-button v-if="playMode=='sing_repeat'" v-bind:label="'单曲循环 ('+musicList.length+')'" class="" icon="repeat_one" />
+						<mu-flat-button v-if="playMode=='random'" v-bind:label="'随机播放 ('+musicList.length+')'" class="" icon="shuffle" />
+					</span>
+					<mu-flat-button label="清空列表" style="float:right;" icon="delete" v-on:click="clearMusicList" />
+				</li>
+				<li class="song_data" v-for="(song,index) in musicList" v-bind:key="index">
+					<div class="s_left" v-bind:class="{active:song.id===curMusic.id}" v-on:click.stop="playSong(song,index)">
+						<span v-text="song.name"></span>-<span v-text="song.ar[0].name"></span>
+					</div>
+				</li>
+			</ul>
+		</mu-popup>	
 		<!-- Audio -->
         <audio id="audio" v-bind:src="curMusic.src" ref="audiobox" v-show="false"></audio>
 	  </div>
@@ -46,18 +67,24 @@ export default {
 	data:function () {
 		return {
 			activeTab:'tab1',
+			isShowMusicBar:false,
 			isOpenMusicPage:false,
+			isOpenPlayListBox:false,
 			isLoad:false,
 			isCanPlay:false,
 			isPlay:false,
 			audioBox:null,
 			curMusic:{
+				sing:"网易云音乐",
+				singer:"听见好时光",
                 src:null,
                 posterUrl:"../static/1.png",
-                sing:"网易云音乐",
-                singer:"听见好时光"
-            },
-			musicList:[],
+			},
+			curPlaylist:{},
+			musicList:[], // 播放列表
+			playModeList:["list_repeat","sing_repeat","random"],
+			playMode:"list_repeat",
+			index:0,
 		};
 	},
 	watch:{
@@ -90,26 +117,47 @@ export default {
 				fail && fail(err);
 			});
 		},
+		playSong:function (song,eq) {
+			// close popup
+			this.isOpenPlayListBox=false;
+			// save cursong data
+			song._index=eq;
+            localStorage.setItem("curSong",JSON.stringify(song));
+			// play this song
+			this.playThisSong();
+			// emit change curmusic data
+			bus.$emit("playlistchange",song);
+		},
 		playThisSong:function () {
 			var that=this;
 			var curSong=JSON.parse(localStorage.getItem("curSong"));
 
 			// Don't repeat play music
 			if (curSong.id==that.curMusic.id) {
-				// if playstatus is paused let it play
-				if (!that.isPlay) {
-					that.startPlay();
+				// if play return
+				if (that.isPlay) {
+					return false;
 				}
-				return false;
+				// if playstatus is paused let it play
+				if (!that.isPlay && that.musicList.length>0) {
+					that.startPlay();
+					return false;
+				}
 			}
+			// show music bottom bar
+			that.isShowMusicBar=true;
+			// push playlist to musiclist
+			let playlist=localStorage.getItem("playlist-"+that.curPlaylist.id);
+			playlist && that.addMusicList(JSON.parse(playlist));
+			// init
+			that.isCanPlay=false;
             // save cur music data
-			that.curMusic={
-				id:curSong.id,
-                posterUrl:curSong.al.picUrl,
-                sing:curSong.name,
-                singer:curSong.ar[0].name // TODO 多作者
-			};
-			
+			that.curMusic.id=curSong.id;
+			that.curMusic.eq=curSong._index;
+			that.curMusic.posterUrl=curSong.al.picUrl;
+			that.curMusic.sing=curSong.name;
+			that.curMusic.singer=curSong.ar[0].name; // TODO 多作者
+			// request song by id
 			if (localStorage.getItem("curSongExData-"+curSong.id)==null) {
 				that.getSongById(curSong.id,function (song) {
 					// load music data
@@ -141,15 +189,16 @@ export default {
 		},
 		startPlay:function () {
 			var that=this;
-			if (that.isLoad) return;
 			if (that.isCanPlay) {
 				that.audioBox.pause();
 				let p1=that.audioBox.play();
 				p1.then(res=>{
 					that.isPlay=true;
+					console.log("开始播放");
 				}).catch(err=>{
 					that.isPlay=false; //BUG  DOMExcept:The play() request was interrupted by a new load request
 					console.error(err);
+					console.log("播放失败");
 				});
 			}
 		},
@@ -158,22 +207,87 @@ export default {
 
 			that.isPlay=false;
 			that.audioBox.pause();
+			console.log("停止播放");
 		},
 		changePlayStatus:function (boo) {
 			this.isPlay=boo;
-		}
+		},
+		addMusicList:function (playlist) {
+			this.curPlaylist.id=playlist.id;
+			playlist.tracks && (this.musicList=playlist.tracks);
+		},
+		clearMusicList:function () {
+			this.isShowMusicBar=false;
+			this.isOpenPlayListBox=false;
+			this.isOpenMusicPage=false;
+			this.musicList=[];
+			this.stopPlay();
+		},
+		changePlayMode:function () {
+			this.index=(this.index+1)%3;
+			this.playMode=this.playModeList[this.index];
+		},
+		// 顺序播放
+		playByAesOrder:function (flag) {
+			var that=this;
+			var songLen=that.musicList.length;
+			var eq=that.curMusic.eq;
+
+			flag==-1?eq--:eq++;
+			return eq=((eq%songLen)+songLen)%songLen;
+		},
+		// 随机播放
+		playByRanOrder:function () {
+			var that=this;
+			var songLen=that.musicList.length;
+			var eq=that.curMusic.eq;
+
+			return eq=Math.floor(Math.random()*songLen);
+		},
+		// 上下首切换
+		playNextOrPrevSong:function (flag) {
+			var that=this;
+			var eq=0;
+			switch (that.playMode) {
+				case "list_repeat":
+					eq=that.playByAesOrder(flag);
+					break;
+				case "sing_repeat":
+					eq=that.curMusic.eq;
+					break;
+				case "random":
+					eq=that.playByRanOrder();
+					break;
+				default:
+					break;
+			}
+			// play No.eq song
+			that.playSong(that.musicList[eq],eq);
+		}	
 	},
 	mounted:function () {
 		var that=this;
+
+		// EVENT BUS
+		bus.$on("curmusicchange",function (eq) {
+			that.playThisSong();
+		});
+
+		bus.$on("play-next-music",function (flag) {
+			that.playNextOrPrevSong(flag);
+		});
+
+		bus.$on("change-play-mode",function () {
+			that.changePlayMode();
+		});
+		
 		that.audioBox=that.$refs["audiobox"];
 
 		var audio=that.audioBox;
 
 		// Event canplay
 		audio.addEventListener("canplay",function () {
-			console.log(666);
 			that.isCanPlay=true;
-			that.isLoad= false;
 			if (that.isPlay) {
 				that.startPlay();
 			} else {
@@ -261,6 +375,33 @@ body{
 .music_btn .mu-icon{
 	font-size: 1.5rem;
 }
+.popup-bottom-playlist{
+	width:100%;
+	max-height:50%;
+	overflow-x: hidden;
+	overflow-y: auto;
+	padding:10px 15px;
+	box-sizing: border-box;
+}
+.song_data{
+	padding:5px 0;
+	border-bottom:1px solid #e8e8e8;
+}
+.song_data:last-of-type{
+	padding:2px 0 0 0;
+	border:none;
+}
+.s_left{
+	max-width:70%;
+	overflow: hidden;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	font-size: 0.7rem;
+}
+.s_left.active{
+	color:#cc2005;
+}
+
 /* animation */
 .slide-left-enter{
   transform:translateX(100%);
