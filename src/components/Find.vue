@@ -156,6 +156,7 @@ export default {
 }
 .mu-tabs{
     background-color:#fff;
+    z-index:1;
 }
 .mu-tab-link{
     min-height:0;
