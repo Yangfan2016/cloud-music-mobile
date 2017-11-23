@@ -18,7 +18,7 @@ import 'muse-ui/dist/muse-ui.css'  // css
 import VueAwesomeSwiper from 'vue-awesome-swiper'
 import 'swiper/dist/css/swiper.css' // css
 
-Vue.config.productionTip = false
+Vue.config.productionTip = false;
 
 Vue.use(MuseUI);   // 加载MuseUI插件
 Vue.use(VueAwesomeSwiper); // 加载 VueAwesomeSwiper轮播图插件
@@ -28,6 +28,16 @@ Vue.prototype.$api=api;
 
 // Event bus
 window.bus=new Vue();
+
+// filter
+Vue.filter("combineName",function (val) {
+	if (val.length<2) return val[0].name;
+	var arr=[];
+	val.forEach(function(v,i) {
+		arr.push(v.name);
+	});
+	return arr.join("/");
+});
 
 /* eslint-disable no-new */
 var app=new Vue({

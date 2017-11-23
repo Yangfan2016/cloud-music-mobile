@@ -5,7 +5,7 @@
                 <p>加载失败！</p>
                 <mu-flat-button slot="actions" primary @click="close" label="确定"/>
             </mu-dialog>
-            <mu-refresh-control :refreshing="refreshing" :trigger="trigger" @refresh="refresh"/>
+            <!-- <mu-refresh-control :refreshing="refreshing" :trigger="trigger" @refresh="refresh"/> -->
             <mu-tabs v-bind:value="activeTab" v-on:change="handleTabChange">
                 <mu-tab value="tab1" title="个性推荐"/>
                 <mu-tab value="tab2" title="歌单"/>
@@ -139,7 +139,7 @@ export default {
     mounted:function () {
         var that=this;
         that.$nextTick(function () {
-            that.trigger=that.$refs["findIndex"];
+            //that.trigger=that.$refs["findIndex"];
             that.getHotPlayList();
         });
     }

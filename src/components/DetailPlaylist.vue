@@ -16,7 +16,7 @@
             </div>
             <div class="listbox">
                 <div class="playbar">
-                    <mu-icon-button icon="play_circle_outline" size="24" class="l-no play_btn"></mu-icon-button>
+                    <mu-icon-button icon="play_circle_outline" size="30" class="l-no play_btn" v-on:click="playAllFromFirst"></mu-icon-button>
                     <div class="r-item play_text">
                         <p>播放全部<span class="text_count">（共{{songList.length}}首）</span></p>
                     </div> 
@@ -29,7 +29,7 @@
                         </div>
                         <div class="r-item" v-on:click.stop="playSong(item,index)">
                             <span class="songname" v-text="item.name"></span>
-                            <p class="songinfo"><span v-text="item.ar[0].name"></span>-<span v-text="item.al.name"></span></p>
+                            <p class="songinfo"><span class="singer">{{item.ar|combineName}}</span> - <span v-text="item.al.name"></span></p>
                         </div> 
                     </li>
                 </ul>
@@ -57,6 +57,9 @@ export default {
             localStorage.setItem("curSong",JSON.stringify(item));
             // emit parent play current music
             bus.$emit("curmusicchange",index);
+        },
+        playAllFromFirst:function () {
+            bus.$emit("play-all");
         }
     },
     mounted:function () {
@@ -129,7 +132,7 @@ export default {
     overflow: hidden;
 }
 .play_btn{
-    color:#900;
+    color:#000;
 }
 .play_text{
     font-size:0.8rem;
@@ -149,6 +152,10 @@ export default {
     text-align:center;
 }
 .r-item{
+    max-width:95%;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
     border-top:1px solid #ddd;
     text-align:left;
 }
@@ -162,5 +169,8 @@ export default {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+}
+.singer{
+    color:#840000;
 }
 </style>

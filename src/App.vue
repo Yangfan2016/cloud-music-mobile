@@ -1,5 +1,6 @@
 <template>
   	<div id="app">
+		<!-- 导航 -->
 		<mu-appbar class="appbar" v-bind:zDepth="0">
 			<mu-icon-button icon="menu" slot="left"/>
 			<mu-flat-button label="我的" class="demo-flat-button" to="/me"></mu-flat-button>
@@ -7,6 +8,7 @@
 			<mu-flat-button label="动态" class="demo-flat-button" to="/dynamic"></mu-flat-button>
 			<mu-icon-button icon="search" slot="right"/>
 		</mu-appbar>
+		<!-- router -->
 		<transition name="slide-left" mode="out-in">
 			<router-view class="view" v-on:push-list="addMusicList" v-bind="{
 				curSong:curMusic
@@ -20,27 +22,27 @@
 				</div>
 				<div class="poster_info">
 					<span class="text info_singname" v-text="curMusic.sing"></span>
-					<span class="text info_singer" v-text="curMusic.singer"></span>
+					<span class="text info_singer">{{curMusic.singer|combineName}}</span>
 				</div>
 			</div>
 			<div class="music_btn">
 				<mu-icon-button icon="play_circle_outline" v-if="!isPlay" v-on:click.stop="startPlay" />
 				<mu-icon-button icon="paused_circle_outline" v-if="isPlay" v-on:click.stop="stopPlay" />
-				<mu-icon-button icon="playlist_play" v-on:click.stop="isOpenPlayListBox=true" />
+				<mu-icon-button icon="playlist_play" v-on:click.stop="openPlayListBox" />
 			</div>
 		</div>
-		<!-- 播放器 -->
+		<!-- 播放页 -->
 		<transition name="slideVertical">
 			<music-play v-show="isOpenMusicPage" v-bind="{
 				curSong:curMusic,
 				isCanPlaySong:isCanPlay,
 				isPlaySong:isPlay,
 				playSongMode:playMode
-			}" v-on:close-box="closeMusicBox" v-on:change-status="changePlayStatus" v-on:open-popbox="isOpenPlayListBox=true"></music-play>
+			}" v-on:close-box="closeMusicBox" v-on:change-status="changePlayStatus" v-on:open-popbox="openPlayListBox"></music-play>
 		</transition>
-		<!-- pop playlist -->
+		<!-- 歌单列表 -->
 		<mu-popup position="bottom" v-bind:overlay="true" popupClass="popup-bottom-playlist" v-bind:open="isOpenPlayListBox" v-on:close="isOpenPlayListBox=false">
-			<ul class="popup-song-detail">
+			<ul class="popup-song-detail" id="popBOX">
 				<li class="song_btngroup">
 					<span style="display:inline-block;" v-on:click="changePlayMode">
 						<mu-flat-button v-if="playMode=='list_repeat'" v-bind:label="'列表循环 ('+musicList.length+')'" class="" icon="repeat" />
@@ -50,18 +52,22 @@
 					<mu-flat-button label="清空列表" style="float:right;" icon="delete" v-on:click="clearMusicList" />
 				</li>
 				<li class="song_data" v-for="(song,index) in musicList" v-bind:key="index">
-					<div class="s_left" v-bind:class="{active:song.id===curMusic.id}" v-on:click.stop="playSong(song,index)">
-						<span v-text="song.name"></span>-<span v-text="song.ar[0].name"></span>
+					<div class="s_left" v-bind:class="{active:song.id===curMusic.id}" v-bind:data-current="song.id===curMusic.id" v-on:click.stop="playSong(song,index)">
+						<span v-text="song.name"></span>-<span>{{song.ar|combineName}}</span>
 					</div>
 				</li>
 			</ul>
 		</mu-popup>	
 		<!-- Audio -->
         <audio id="audio" v-bind:src="curMusic.src" ref="audiobox" v-show="false"></audio>
+		<!-- test -->
+		<search v-if="false"></search>
 	  </div>
 </template>
 <script>
 import PlayPage from "./components/PlayPage.vue"
+import SearchPage from "./components/SearchPage.vue"
+
 export default {
 	name: 'app',
 	data:function () {
@@ -76,9 +82,7 @@ export default {
 			audioBox:null,
 			curMusic:{
 				sing:"网易云音乐",
-				singer:"听见好时光",
-                src:null,
-                posterUrl:"../static/1.png",
+				singer:[{name:""}],
 			},
 			curPlaylist:{},
 			musicList:[], // 播放列表
@@ -95,6 +99,16 @@ export default {
 	methods:{
 		handleTabChange:function (val) {
 			this.activeTab=val;
+		},
+		openPlayListBox:function () {
+			var that=this;
+			this.isOpenPlayListBox=true;
+
+			setTimeout(function() {
+				var popBOX=document.getElementById("popBOX");
+				var current=popBOX.querySelectorAll("[data-current]")[0];
+				current.scrollIntoView({behavior:"smooth"});
+			}, 0);
 		},
 		openMusicBox:function () {
 			var that=this;
@@ -156,7 +170,7 @@ export default {
 			that.curMusic.eq=curSong._index;
 			that.curMusic.posterUrl=curSong.al.picUrl;
 			that.curMusic.sing=curSong.name;
-			that.curMusic.singer=curSong.ar[0].name; // TODO 多作者
+			that.curMusic.singer=curSong.ar;
 			// request song by id
 			if (localStorage.getItem("curSongExData-"+curSong.id)==null) {
 				that.getSongById(curSong.id,function (song) {
@@ -182,7 +196,6 @@ export default {
 		loadedSong:function (data) {
 			var that=this;
 			that.curMusic.src=data.url; // TODO 多歌曲
-			that.curMusic.size=data.size;
 			that.audioBox.src=data.url;
 			that.audioBox.load();
 			that.isLoad = true;
@@ -222,6 +235,8 @@ export default {
 			this.isOpenMusicPage=false;
 			this.musicList=[];
 			this.stopPlay();
+			// remove highlight
+			bus.$emit("playlistchange",{id:-1});
 		},
 		changePlayMode:function () {
 			this.index=(this.index+1)%3;
@@ -280,8 +295,14 @@ export default {
 		bus.$on("change-play-mode",function () {
 			that.changePlayMode();
 		});
+
+		bus.$on("play-all",function () {
+			that.openMusicBox();
+			that.playSong(that.musicList[0],0);
+		});
 		
 		that.audioBox=that.$refs["audiobox"];
+		
 
 		var audio=that.audioBox;
 
@@ -296,7 +317,8 @@ export default {
 		},false);
 	},
 	components:{
-		"music-play":PlayPage
+		"music-play":PlayPage,
+		"search":SearchPage
 	}
 }
 </script>
