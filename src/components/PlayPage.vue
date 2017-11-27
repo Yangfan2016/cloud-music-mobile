@@ -1,7 +1,7 @@
 <template>
     <div class="playpage">
         <div class="headbar">
-            <mu-icon-button class="backbtn" icon="chevron_left" slot="left" v-on:click="closeBox" />
+            <mu-icon-button class="backbtn" icon="arrow_back" slot="left" v-on:click="closeBox" />
             <div class="info">
                 <p class="sing">{{curMusic.sing}}</p>
                 <p class="singer">{{curMusic.singer|combineName}}</p>
@@ -20,11 +20,9 @@
             <div class="swith" v-bind:class="{running:isPlaySong}"></div>
         </div>
         <div class="btngroup">
-            <span style="display:inline-block;" v-on:click.stop="changePlaySongMode">
-                <mu-icon-button v-if="playSongMode=='list_repeat'" class="" icon="repeat" />
-                <mu-icon-button v-if="playSongMode=='sing_repeat'" class="" icon="repeat_one" />
-                <mu-icon-button v-if="playSongMode=='random'"  class="" icon="shuffle" />
-            </span>
+            <mu-icon-button v-if="playSongMode=='list_repeat'" class="" icon="repeat" v-on:click.stop="changePlaySongMode" />
+            <mu-icon-button v-if="playSongMode=='sing_repeat'" class="" icon="repeat_one" v-on:click.stop="changePlaySongMode" />
+            <mu-icon-button v-if="playSongMode=='random'"  class="" icon="shuffle" v-on:click.stop="changePlaySongMode" />
             <mu-icon-button iconClass="btn" icon="skip_previous" v-on:click.stop="playNextOrPrev(-1)" />
             <mu-icon-button iconClass="btn play" icon="play_circle_outline" v-if="!isPlaySong" v-on:click.stop="playMusic(true)" />
             <mu-icon-button iconClass="btn play" icon="pause_circle_outline" v-if="isPlaySong" v-on:click.stop="playMusic(false)" />
@@ -88,24 +86,34 @@ export default {
     width:100%;
     min-height: 100vh;
     z-index:11;
-    background-color: #fff;
+    background-color: #aaa;
 }
 .playpage .headbar{
     display: flex;
     position: relative;
     width:100%;
     height:56px;
-    padding:4px 0;
+}
+.headbar>.backbtn{
+    color:#fff;
 }
 .headbar>.info{
+    width:80%;
+    padding:8px 0;
     text-align:left;
 }
 .info>.sing{
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
     font-size: 0.8rem;
     color:#fff;
 }
 .info>.singer{
-    color:#635f5f;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color:#fff;
 }
 .headbar>.line{
     position: absolute;
@@ -124,8 +132,9 @@ export default {
     background-repeat: no-repeat;
     background-size: cover;
     background-position:center;
-    filter: blur(30px);
+    filter: blur(30px) opacity(0.8);
     z-index: -1;
+    transition:all 1s ease;
 }
 .playpage .btngroup{
     display: flex;
@@ -133,12 +142,19 @@ export default {
     position: absolute;
     width:100%;
     bottom:0;
-    padding:20px 10px;
+    padding:5px 10px;
     color:#fff;
     background-image: linear-gradient(180deg,transparent,rgba(0,0,0,0.8));
 }
+.playpage .mu-icon-button{
+    width:auto;
+    height:auto;
+}
 .playpage .btngroup .btn{
     font-size: 1.5rem;
+}
+.playpage .btngroup .btn.play{
+    font-size:2.8rem;
 }
 .playpage .cd{
     position: relative;
@@ -168,7 +184,7 @@ export default {
     width:calc(50vw + 80px);
     height:calc(50vw + 80px);
     transform: translate(-50%,-50%);
-    animation: rotateA 3s linear infinite;
+    animation: rotateA 6s linear infinite;
     animation-play-state: paused;
 }
 .playpage .disc_circle_outter{
@@ -244,6 +260,8 @@ export default {
     width:50vw;
     height:50vw;
     border-radius: 50%;
+    background-size:cover;
+    background-position: center;
 }
 @keyframes rotateA{
     0%{

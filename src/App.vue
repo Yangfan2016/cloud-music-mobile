@@ -6,7 +6,7 @@
 			<mu-flat-button label="我的" class="demo-flat-button" to="/me"></mu-flat-button>
 			<mu-flat-button label="发现" class="demo-flat-button" to="/"></mu-flat-button>
 			<mu-flat-button label="动态" class="demo-flat-button" to="/dynamic"></mu-flat-button>
-			<mu-icon-button icon="search" slot="right"/>
+			<mu-icon-button icon="search" slot="right" v-on:click="searchMusic" />
 		</mu-appbar>
 		<!-- router -->
 		<transition name="slide-left" mode="out-in">
@@ -61,7 +61,7 @@
 		<!-- Audio -->
         <audio id="audio" v-bind:src="curMusic.src" ref="audiobox" v-show="false"></audio>
 		<!-- test -->
-		<search v-if="false"></search>
+		<search v-if="isOpenSearchPage" v-on:close-search="isOpenSearchPage=false" v-on:open-play="isOpenMusicPage=true" v-on:push-list="pushCurPlayList"></search>
 	  </div>
 </template>
 <script>
@@ -76,6 +76,7 @@ export default {
 			isShowMusicBar:false,
 			isOpenMusicPage:false,
 			isOpenPlayListBox:false,
+			isOpenSearchPage:false,
 			isLoad:false,
 			isCanPlay:false,
 			isPlay:false,
@@ -83,6 +84,7 @@ export default {
 			curMusic:{
 				sing:"网易云音乐",
 				singer:[{name:""}],
+				duration:0,
 			},
 			curPlaylist:{},
 			musicList:[], // 播放列表
@@ -107,7 +109,7 @@ export default {
 			setTimeout(function() {
 				var popBOX=document.getElementById("popBOX");
 				var current=popBOX.querySelectorAll("[data-current]")[0];
-				current.scrollIntoView({behavior:"smooth"});
+				current && current.scrollIntoView({behavior:"smooth"});
 			}, 0);
 		},
 		openMusicBox:function () {
@@ -171,6 +173,7 @@ export default {
 			that.curMusic.posterUrl=curSong.al.picUrl;
 			that.curMusic.sing=curSong.name;
 			that.curMusic.singer=curSong.ar;
+
 			// request song by id
 			if (localStorage.getItem("curSongExData-"+curSong.id)==null) {
 				that.getSongById(curSong.id,function (song) {
@@ -196,6 +199,7 @@ export default {
 		loadedSong:function (data) {
 			var that=this;
 			that.curMusic.src=data.url; // TODO 多歌曲
+			that.curMusic.duration=that.audioBox.duration || 0;
 			that.audioBox.src=data.url;
 			that.audioBox.load();
 			that.isLoad = true;
@@ -278,7 +282,17 @@ export default {
 			}
 			// play No.eq song
 			that.playSong(that.musicList[eq],eq);
-		}	
+		},
+		// 进入搜索页
+		searchMusic:function () {
+			// TODO
+			var that=this;
+			that.isOpenSearchPage=true;
+		},
+		// 加入播放列表
+		pushCurPlayList:function (song) {
+			this.musicList.push(song);
+		}
 	},
 	mounted:function () {
 		var that=this;
@@ -357,6 +371,7 @@ body{
 	top:0;
 	display:flex;
 	z-index:5;  
+	background-color: rgb(150,10,10);
 }
 .musicbar{
 	display: flex;

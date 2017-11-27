@@ -1,8 +1,8 @@
 <template>
-    <div class="details">
+    <div class="details" id="detailPage">
         <div class="d_content">
-            <mu-appbar class="appbar" v-bind:zDepth="0" title="歌单">
-                <mu-icon-button icon="chevron_left" slot="left" v-on:click="closeList" />
+            <mu-appbar class="appbar" v-bind:zDepth="0" title="歌单" id="appbar">
+                <mu-icon-button icon="arrow_back" slot="left" v-on:click="closeList" />
             </mu-appbar>
             <div class="coverbox">
                 <div class="cover_user">
@@ -14,7 +14,7 @@
                 </div>
                 <div class="cover_bg"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:100%;"></div>
             </div>
-            <div class="listbox">
+            <div class="listbox" id="listBOX">
                 <div class="playbar">
                     <mu-icon-button icon="play_circle_outline" size="30" class="l-no play_btn" v-on:click="playAllFromFirst"></mu-icon-button>
                     <div class="r-item play_text">
@@ -64,10 +64,24 @@ export default {
     },
     mounted:function () {
         var that=this;
+        var detailPage=document.getElementById("detailPage");
+        var appbar=document.getElementById("appbar");
+        var listBOX=document.getElementById("listBOX");
+        var top=listBOX.getBoundingClientRect().top-parseInt(getComputedStyle(appbar,null)["height"]);
 
         bus.$on("playlistchange",function (song) {
             that.curSong.id=song.id;
         });
+
+        // BUG
+        detailPage.addEventListener("scroll",function () {
+            if (detailPage.scrollTop>=top) {
+                appbar.style.backgroundColor="rgb(150, 10, 10)";
+            } else {
+                appbar.style.backgroundColor="rgba(0,0,0,0.15)";
+            }
+        },false);
+
     }
 }
 </script>
@@ -85,6 +99,7 @@ export default {
     background-color: #fff;
 }
 .mu-appbar{
+    transition:all 0.8s ease;
     background-color: rgba(0,0,0,0.15);
 }
 .coverbox{
