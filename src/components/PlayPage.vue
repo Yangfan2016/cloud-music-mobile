@@ -167,7 +167,7 @@ export default {
     left:50%;
     width:90px;
     height:140px;
-    background-image: url(../assets/swith.png);
+    background-image: url("../assets/swith.png");
     background-size:cover;
     z-index:0;
     transform-origin: 10px 10px;
