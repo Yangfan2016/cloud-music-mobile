@@ -2,7 +2,7 @@
   	<div id="app">
 		<!-- 导航 -->
 		<mu-appbar class="appbar" v-bind:zDepth="0">
-			<mu-icon-button icon="menu" slot="left"/>
+			<mu-icon-button value="menu" icon="menu" slot="left"/>
 			<mu-flat-button label="我的" class="demo-flat-button" to="/me"></mu-flat-button>
 			<mu-flat-button label="发现" class="demo-flat-button" to="/"></mu-flat-button>
 			<mu-flat-button label="动态" class="demo-flat-button" to="/dynamic"></mu-flat-button>
@@ -69,8 +69,7 @@ import PlayPage from "./components/PlayPage.vue"
 import SearchPage from "./components/SearchPage.vue"
 
 export default {
-	name: 'app',
-	data:function () {
+	data() {
 		return {
 			activeTab:'tab1',
 			isShowMusicBar:false,
@@ -138,7 +137,7 @@ export default {
 			this.isOpenPlayListBox=false;
 			// save cursong data
 			song._index=eq;
-            localStorage.setItem("curSong",JSON.stringify(song));
+            sessionStorage.setItem("curSong",JSON.stringify(song));
 			// play this song
 			this.playThisSong();
 			// emit change curmusic data
@@ -146,7 +145,7 @@ export default {
 		},
 		playThisSong:function () {
 			var that=this;
-			var curSong=JSON.parse(localStorage.getItem("curSong"));
+			var curSong=JSON.parse(sessionStorage.getItem("curSong"));
 
 			// Don't repeat play music
 			if (curSong.id==that.curMusic.id) {
@@ -163,7 +162,7 @@ export default {
 			// show music bottom bar
 			that.isShowMusicBar=true;
 			// push playlist to musiclist
-			let playlist=localStorage.getItem("playlist-"+that.curPlaylist.id);
+			let playlist=sessionStorage.getItem("playlist-"+that.curPlaylist.id);
 			playlist && that.addMusicList(JSON.parse(playlist));
 			// init
 			that.isCanPlay=false;
@@ -175,21 +174,21 @@ export default {
 			that.curMusic.singer=curSong.ar;
 
 			// request song by id
-			if (localStorage.getItem("curSongExData-"+curSong.id)==null) {
+			if (sessionStorage.getItem("curSongExData-"+curSong.id)==null) {
 				that.getSongById(curSong.id,function (song) {
 					// load music data
 					that.loadedSong(song.data[0]);
 					// playmusic
 					that.isPlay=true;
 					// save
-					localStorage.setItem("curSongExData-"+curSong.id,JSON.stringify(song.data[0]));
+					sessionStorage.setItem("curSongExData-"+curSong.id,JSON.stringify(song.data[0]));
 				},function (err) {
 					that.isCanPlay=false;
 					that.isPlay=false;
 					console.log("加载失败 ",err);
 				});
 			} else {
-				let exData=JSON.parse(localStorage.getItem("curSongExData-"+curSong.id));
+				let exData=JSON.parse(sessionStorage.getItem("curSongExData-"+curSong.id));
 				// load music data
 				that.loadedSong(exData);
 				// playmusic

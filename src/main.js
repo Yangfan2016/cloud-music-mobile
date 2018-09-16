@@ -24,26 +24,27 @@ Vue.use(MuseUI);   // 加载MuseUI插件
 Vue.use(VueAwesomeSwiper); // 加载 VueAwesomeSwiper轮播图插件
 
 Vue.prototype.$http = axios;
-Vue.prototype.$api=api;
+Vue.prototype.$api = api;
 
 // Event bus
-window.bus=new Vue();
+window.bus = new Vue();
 
 // filter
-Vue.filter("combineName",function (val) {
-	if (val.length<2) return val[0].name;
-	var arr=[];
-	val.forEach(function(v,i) {
-		arr.push(v.name);
+Vue.filter("combineName", function (val) {
+	if (!val || val.length === 0) return 'null';
+	if (val.length === 1) return !!val[0]?val[0].name:'null';
+	var arr = [];
+	val.forEach(function (v, i) {
+		arr.push(!!v?v.name:'null');
 	});
 	return arr.join("/");
 });
 
 /* eslint-disable no-new */
-var app=new Vue({
-  el: '#app',
-  router,
-  template: '<App/>',
-  components: { App }
+new Vue({
+	el: '#app',
+	router,
+	template: '<App/>',
+	components: { App }
 });
 

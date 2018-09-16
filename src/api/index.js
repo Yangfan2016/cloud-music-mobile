@@ -1,23 +1,36 @@
-const _baseUrl = 'http://musicapi.duapp.com/api.php';
-const _baseUrl2 = 'https://api.imjad.cn/cloudmusic/';
-export default{
-  getPlayListByWhere (cat,offset,limit,total,order) {
-    return _baseUrl + '?type=topPlayList&cat=' + cat + '&offset=' + offset + '&limit=' + limit+'&order='+order+'&total='+total;
+import { serialize } from "../utils/tools.js";
+
+const serverHost = 'http://localhost:3000';
+
+export default {
+  getPlayListByWhere(options) {
+    return `${serverHost}/top/playlist?${serialize(options)}`;
   },
-  getLrc (id) {
-    return _baseUrl2 + '?type=lyric&id=' + id;
+  getLrc(id) {
+    return `${serverHost}'?type=lyric&id=' + id`;
   },
-  getSong (id) {
-    return _baseUrl2 + '?type=url&id=' + id;
+  getSong(id,options={
+    br:999000
+  }) {
+    return `${serverHost}/music/url?id=${id}&${serialize(options)}`;
   },
-  getPlayListDetail (id) {
-    return _baseUrl2 + '?type=playlist&id=' + id;
+  getSongDetail(id) {
+    return `${serverHost}/song/detail?ids=${id}`;
   },
-  getMv (id) {
-    return _baseUrl2 + '?type=mv&id=' + id;
+  getPlayListDetail(id) {
+    return `${serverHost}/playlist/detail?id=${id}`;
   },
-  search (words) {
-    return _baseUrl2 + '?type=search&s=' + words;
+  getMv(id) {
+    return serverHost + '?type=mv&id=' + id;
+  },
+  search(word, options = {
+    limit: 10,
+    offset: 0
+  }) {
+    return `${serverHost}/search?keywords=${word}&${serialize(options)}`;
+  },
+  getBannerImg() {
+    return `${serverHost}/banner`;
   }
 };
 

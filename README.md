@@ -1,31 +1,58 @@
-# 云音乐
+## cloud-music-mobile
 
-> A Vue.js project
+This is a music player
 
-## Build Setup
+![cloud-music-mobile](https://raw.githubusercontent.com/Yangfan2016/PicBed/master/Blog/cloud-music-mobile.gif)
 
-``` bash
-# install dependencies
-npm install
+### Intro
 
-# serve with hot reload at localhost:8080
-npm run dev
+推荐歌单  
+歌单详情  
+搜索歌曲  
+播放器  
+播放列表  
+随机播放、列表播放、单曲循环
 
-# build for production with minification
-npm run build
+### Technology stack
 
-# build for production and view the bundle analyzer report
-npm run build --report
+`Vue`  
+`Vue-router`  
+`axios`  
+`Muse-UI`  
+`vue-awesome-swiper`  
 
-# run unit tests
-npm run unit
+### API server
 
-# run e2e tests
-npm run e2e
+由[网易云音乐 Node.js API service](https://github.com/Binaryify/NeteaseCloudMusicApi)提供
 
-# run all tests
-npm test
+### Run
+
+- 后台
+```bash
+$ git clone git@github.com:Binaryify/NeteaseCloudMusicApi.git
+
+$ yarn
+$ node app.js
+
 ```
+- 前台
 
-For detailed explanation on how things work, checkout the [guide](http://vuejs-templates.github.io/webpack/) and [docs for vue-loader](http://vuejs.github.io/vue-loader).
+```bash
+$ yarn
+$ yarn run dev
+```
+open chrome http://localhost:8080
 
+### Contributing
+- Fork this Repo first
+- Clone your Repo
+- Install dependencies by `$ npm install`
+- Checkout a feature branch
+- Feel free to add your features
+- Make sure your features are fully tested
+- Publish your local branch, Open a pull request
+- Enjoy hacking <3
+
+---
+![docor]()
+built upon love by [docor](https://github.com/turingou/docor.git) v0.3.0

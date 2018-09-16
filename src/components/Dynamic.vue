@@ -5,7 +5,6 @@
 </template>
 <script type="text/javascript">
 export default {
-	name:'dynamic'
 }
 </script>
 <style scoped>
