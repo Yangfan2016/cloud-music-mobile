@@ -19,6 +19,7 @@
 </template>
 <script>
 export default {
+  name: "search-page",
   data() {
     return {
       keywords: "",
@@ -63,9 +64,9 @@ export default {
       // get song detail
       this.$http(this.$api.getSongDetail(item.id))
         .then(res => {
-          let data=res.data;
+          let data = res.data;
           if (data.code === 200 && data.songs) {
-            let song=data.songs[0];
+            let song = data.songs[0];
             // closeSearchPage
             this.closeThisPage();
             // openPlayPage

@@ -22,11 +22,10 @@ export let reSerialize = str => {
  * @param {*延时} delay 
  * @param {*是否立即触发} isImmediate 
  */
-export let debounce = (fn, delay=800, isImmediate=false) => {
+export let debounce = (fn, delay = 800, isImmediate = false) => {
     let timer = null;
 
     return function () {
-        console.log(this)
         let ctx = this, // 保存作用域
             args = arguments; // 保存参数
         // 初始化清空所有定时器
@@ -39,11 +38,11 @@ export let debounce = (fn, delay=800, isImmediate=false) => {
                 fn.apply(ctx, args);
             }
             // delay时间后置空timer
-            timer = setTimeout(_ => {
+            timer = setTimeout(() => {
                 timer = null;
             }, delay);
         } else { // delay时间后触发操作
-            timer = setTimeout(_ => {
+            timer = setTimeout(() => {
                 fn.apply(ctx, args);
             }, delay);
         }

@@ -3,6 +3,7 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import store from './store'
 
 // ajax
 import axios from 'axios'
@@ -32,10 +33,10 @@ window.bus = new Vue();
 // filter
 Vue.filter("combineName", function (val) {
 	if (!val || val.length === 0) return 'null';
-	if (val.length === 1) return !!val[0]?val[0].name:'null';
+	if (val.length === 1) return !!val[0] ? val[0].name : 'null';
 	var arr = [];
 	val.forEach(function (v, i) {
-		arr.push(!!v?v.name:'null');
+		arr.push(!!v ? v.name : 'null');
 	});
 	return arr.join("/");
 });
@@ -44,7 +45,9 @@ Vue.filter("combineName", function (val) {
 new Vue({
 	el: '#app',
 	router,
-	template: '<App/>',
-	components: { App }
+	store,
+	render(h) {
+		return h(App);
+	},
 });
 

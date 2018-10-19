@@ -12,7 +12,7 @@ export default {
   getSong(id,options={
     br:999000
   }) {
-    return `${serverHost}/music/url?id=${id}&${serialize(options)}`;
+    return `${serverHost}/song/url?id=${id}&${serialize(options)}`;
   },
   getSongDetail(id) {
     return `${serverHost}/song/detail?ids=${id}`;
