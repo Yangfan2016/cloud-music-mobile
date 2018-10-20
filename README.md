@@ -33,7 +33,7 @@ version: 3.0
 ```bash
 $ git clone git@github.com:Binaryify/NeteaseCloudMusicApi.git
 
-$ yarn
+$ yarn 
 $ node app.js
 
 ```
@@ -41,9 +41,8 @@ $ node app.js
 
 ```bash
 $ yarn
-$ yarn run dev
+$ yarn serve
 ```
-open chrome http://localhost:8080
 
 ### Contributing
 - Fork this Repo first
