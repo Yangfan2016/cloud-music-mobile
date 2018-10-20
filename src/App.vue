@@ -33,24 +33,21 @@
 		</div>
 		<!-- 播放页 -->
 		<transition name="slideVertical">
-			<play-page v-show="isOpenMusicPage" v-bind="{
-				curSong:curPlaySong,
-				isCanPlaySong:isCanPlay,
-				isPlaySong:isPlay,
-				playSongMode:curPlayMode
-			}" v-on:close-box="openOrCloseMusicBox(false)" v-on:change-status="changePlayStatus" v-on:open-popbox="openPlayListBox"></play-page>
+			<play-page 
+        v-show="isOpenMusicPage"
+        v-on:open-popbox="openPlayListBox"></play-page>
 		</transition>
 		<!-- 歌单列表 -->
-		<mu-popup position="bottom" v-bind:overlay="true" popupClass="popup-bottom-playlist" v-bind:open="isOpenPlayListBox" v-on:close="isOpenPlayListBox=false">
-			<ul class="popup-song-detail" id="popBOX">
-				<li class="song_btngroup">
+		<mu-popup position="bottom" v-bind:overlay="true" popupClass="popup-bottom-playlist" v-bind:open="isOpenPlayListBox" v-on:close="openOrClosePlayListBox(false)">
+			<div class="popup-song-top">
 					<span style="display:inline-block;" v-on:click="changePlayMode">
 						<mu-flat-button v-if="curPlayMode==0" v-bind:label="'列表循环 ('+musicList.length+')'" icon="repeat" />
 						<mu-flat-button v-if="curPlayMode==1" v-bind:label="'单曲循环 ('+musicList.length+')'" icon="repeat_one" />
 						<mu-flat-button v-if="curPlayMode==2" v-bind:label="'随机播放 ('+musicList.length+')'" icon="shuffle" />
 					</span>
 					<mu-flat-button label="清空列表" style="float:right;" icon="delete" v-on:click="clearMusicList" />
-				</li>
+      </div>
+      <ul class="popup-song-detail" id="popBOX">
 				<li class="song_data" v-for="(song,index) in musicList" v-bind:key="index">
 					<div class="s_left" v-bind:class="{active:song.id===curPlaySong.id}" v-bind:data-current="song.id===curPlaySong.id" v-on:click.stop="playSong(song,index)">
 						<span v-text="song.name"></span>-<span>{{song.ar|combineName}}</span>
@@ -59,7 +56,7 @@
 			</ul>
 		</mu-popup>	
 		<!-- Audio -->
-        <audio id="audio" v-bind:src="curPlaySong.src" ref="audiobox" v-show="false"></audio>
+    <audio id="audio" v-bind:src="curPlaySong.src" ref="audiobox" v-show="false"></audio>
 		<!-- test -->
 		<search-page v-if="isOpenSearchPage" v-on:close-search="isOpenSearchPage=false" v-on:open-play="openOrCloseMusicBox(true)" v-on:push-list="pushCurPlayList"></search-page>
 	  </div>
@@ -74,51 +71,69 @@ export default {
     return {
       activeTab: "tab1",
       isShowMusicBar: false,
-      isOpenPlayListBox: false,
       isOpenSearchPage: false,
       isLoad: false,
-      isCanPlay: false,
-      isPlay: false,
       audioBox: null,
-      curPlaylist: {},
+      curPlaylist: {}, // 当前播放列表
       musicList: [] // 播放列表
     };
   },
   computed: {
-    ...mapState(["isOpenMusicPage", "curPlayMode", "curPlaySong"])
+    ...mapState([
+      "isOpenMusicPage",
+      "isOpenPlayListBox",
+      "isPlay",
+      "isCanPlay",
+      "isPlayAll",
+      "curPlayMode",
+      "curPlaySong",
+      "curPlayIndex",
+      "nextSong"
+    ])
   },
   watch: {
-    isPlay: function(val, oldVal) {
-      val ? this.startPlay() : this.stopPlay();
+    isPlay(boo) {
+      boo ? this.startPlay() : this.stopPlay();
+    },
+    isPlayAll(boo) {
+      if (boo) {
+        this.openOrCloseMusicBox(true);
+        this.playSong(this.musicList[0], 0);
+      }
+    },
+    curPlayIndex(n) {
+      this.playThisSong(n);
+    },
+    nextSong(flag) {
+      this.playNextOrPrevSong(flag);
     }
   },
   methods: {
     ...mapMutations([
       "openOrCloseMusicBox",
+      "openOrClosePlayListBox",
       "changePlayMode",
+      "changePlayStatus",
+      "changeCanPlayStatus",
       "refreshCurSongDetail"
     ]),
-    handleTabChange: function(val) {
+    handleTabChange(val) {
       this.activeTab = val;
     },
-    openPlayListBox: function() {
-      var that = this;
-      this.isOpenPlayListBox = true;
+    openPlayListBox() {
+      this.openOrClosePlayListBox(true);
 
-      setTimeout(function() {
-        var popBOX = document.getElementById("popBOX");
-        var current = popBOX.querySelectorAll("[data-current]")[0];
+      setTimeout(() => {
+        let popBOX = document.getElementById("popBOX");
+        let current = popBOX.querySelectorAll("[data-current]")[0];
         current && current.scrollIntoView({ behavior: "smooth" });
       }, 0);
     },
-    getSongById: function(id, succ, fail) {
-      var that = this;
-
-      that
-        .$http({
-          url: that.$api.getSong(id),
-          method: "GET"
-        })
+    getSongById(id, succ, fail) {
+      this.$http({
+        url: this.$api.getSong(id),
+        method: "GET"
+      })
         .then(res => {
           succ && succ(res.data);
         })
@@ -127,9 +142,9 @@ export default {
           fail && fail(err);
         });
     },
-    playSong: function(song, eq) {
+    playSong(song, eq) {
       // close popup
-      this.isOpenPlayListBox = false;
+      this.openOrClosePlayListBox(false);
       // save cursong data
       song._index = eq;
       sessionStorage.setItem("curSong", JSON.stringify(song));
@@ -138,31 +153,30 @@ export default {
       // emit change curmusic data
       bus.$emit("playlistchange", song);
     },
-    playThisSong: function() {
-      var that = this;
-      var curSong = JSON.parse(sessionStorage.getItem("curSong"));
+    playThisSong() {
+      let curSong = JSON.parse(sessionStorage.getItem("curSong"));
 
       // Don't repeat play music
-      if (curSong.id == that.curPlaySong.id) {
+      if (curSong.id == this.curPlaySong.id) {
         // if play return
-        if (that.isPlay) {
+        if (this.isPlay) {
           return false;
         }
         // if playstatus is paused let it play
-        if (!that.isPlay && that.musicList.length > 0) {
-          that.startPlay();
+        if (!this.isPlay && this.musicList.length > 0) {
+          this.startPlay();
           return false;
         }
       }
       // show music bottom bar
-      that.isShowMusicBar = true;
+      this.isShowMusicBar = true;
       // push playlist to musiclist
-      let playlist = sessionStorage.getItem("playlist-" + that.curPlaylist.id);
-      playlist && that.addMusicList(JSON.parse(playlist));
+      let playlist = sessionStorage.getItem("playlist-" + this.curPlaylist.id);
+      playlist && this.addMusicList(JSON.parse(playlist));
       // init
-      that.isCanPlay = false;
-      // save cur music data BUG
-      that.refreshCurSongDetail({
+      this.changeCanPlayStatus(false);
+      // save cur music data
+      this.refreshCurSongDetail({
         id: curSong.id,
         eq: curSong._index,
         posterUrl: curSong.al.picUrl,
@@ -172,23 +186,23 @@ export default {
 
       // request song by id
       if (sessionStorage.getItem("curSongExData-" + curSong.id) == null) {
-        that.getSongById(
+        this.getSongById(
           curSong.id,
-          function(song) {
+          song => {
             // load music data
-            that.loadedSong(song.data[0]);
+            this.loadedSong(song.data[0]);
             // playmusic
-            that.isPlay = true;
+            this.changePlayStatus(true);
             // save
             sessionStorage.setItem(
               "curSongExData-" + curSong.id,
               JSON.stringify(song.data[0])
             );
           },
-          function(err) {
-            that.isCanPlay = false;
-            that.isPlay = false;
-            console.log("加载失败 ", err);
+          err => {
+            this.changeCanPlayStatus(false);
+            this.changePlayStatus(false);
+            console.error("加载失败 ", err);
           }
         );
       } else {
@@ -196,54 +210,43 @@ export default {
           sessionStorage.getItem("curSongExData-" + curSong.id)
         );
         // load music data
-        that.loadedSong(exData);
+        this.loadedSong(exData);
         // playmusic
-        that.isPlay = true;
+        this.changePlayStatus(true);
       }
     },
-    loadedSong: function(data) {
-      var that = this;
-
-      that.refreshCurSongDetail({
-        src: data.url,// TODO 多歌曲
-        duration: that.audioBox.duration || 0
+    loadedSong(data) {
+      this.refreshCurSongDetail({
+        src: data.url, // TODO 多歌曲
+        duration: this.audioBox.duration || 0
       });
-      that.audioBox.src = data.url;
-      that.audioBox.load();
-      that.isLoad = true;
+      this.audioBox.src = data.url;
+      this.audioBox.load();
+      this.isLoad = true;
     },
-    startPlay: function() {
-      var that = this;
-      if (that.isCanPlay) {
-        that.audioBox.pause();
-        let p1 = that.audioBox.play();
+    startPlay() {
+      if (this.isCanPlay) {
+        this.audioBox.pause();
+        let p1 = this.audioBox.play();
         p1.then(res => {
-          that.isPlay = true;
-          console.log("开始播放");
+          this.changePlayStatus(true);
         }).catch(err => {
-          that.isPlay = false; //BUG  DOMExcept:The play() request was interrupted by a new load request
+          this.changePlayStatus(false); //BUG  DOMExcept:The play() request was interrupted by a new load request
           console.error(err);
-          console.log("播放失败");
         });
       }
     },
-    stopPlay: function() {
-      var that = this;
-
-      that.isPlay = false;
-      that.audioBox.pause();
-      console.log("停止播放");
+    stopPlay() {
+      this.changePlayStatus(false);
+      this.audioBox.pause();
     },
-    changePlayStatus: function(boo) {
-      this.isPlay = boo;
-    },
-    addMusicList: function(playlist) {
+    addMusicList(playlist) {
       this.curPlaylist.id = playlist.id;
       playlist.tracks && (this.musicList = playlist.tracks);
     },
-    clearMusicList: function() {
+    clearMusicList() {
       this.isShowMusicBar = false;
-      this.isOpenPlayListBox = false;
+      this.openOrClosePlayListBox(false);
       this.openOrCloseMusicBox(false);
       this.musicList = [];
       this.stopPlay();
@@ -251,81 +254,60 @@ export default {
       bus.$emit("playlistchange", { id: -1 });
     },
     // 顺序播放
-    playByAesOrder: function(flag) {
-      var that = this;
-      var songLen = that.musicList.length;
-      var eq = that.curPlaySong.eq;
+    playByAesOrder(flag) {
+      let songLen = this.musicList.length;
+      let eq = this.curPlaySong.eq;
 
       flag == -1 ? eq-- : eq++;
       return (eq = ((eq % songLen) + songLen) % songLen);
     },
     // 随机播放
-    playByRanOrder: function() {
-      var that = this;
-      var songLen = that.musicList.length;
-      var eq = that.curPlaySong.eq;
+    playByRanOrder() {
+      let songLen = this.musicList.length;
+      let eq = this.curPlaySong.eq;
 
       return (eq = Math.floor(Math.random() * songLen));
     },
     // 上下首切换
-    playNextOrPrevSong: function(flag) {
-      var that = this;
-      var eq = 0;
+    playNextOrPrevSong(flag) {
+      let eq = 0;
       switch (this.curPlayMode) {
         case 0:
-          eq = that.playByAesOrder(flag);
+          eq = this.playByAesOrder(flag);
           break;
         case 1:
-          eq = that.curPlaySong.eq;
+          eq = this.curPlaySong.eq;
           break;
         case 2:
-          eq = that.playByRanOrder();
+          eq = this.playByRanOrder();
           break;
         default:
           break;
       }
       // play No.eq song
-      that.playSong(that.musicList[eq], eq);
+      this.playSong(this.musicList[eq], eq);
     },
     // 进入搜索页
-    searchMusic: function() {
+    searchMusic() {
       // TODO
-      var that = this;
-      that.isOpenSearchPage = true;
+      this.isOpenSearchPage = true;
     },
     // 加入播放列表
-    pushCurPlayList: function(song) {
+    pushCurPlayList(song) {
       this.musicList.push(song);
     }
   },
   mounted() {
-    // EVENT BUS
-    bus.$on("curmusicchange", eq => {
-      this.playThisSong();
-    });
-
-    bus.$on("play-next-music", flag => {
-      this.playNextOrPrevSong(flag);
-    });
-
-    bus.$on("change-play-mode", () => {
-      this.changePlayMode();
-    });
-
-    bus.$on("play-all", () => {
-      this.openOrCloseMusicBox(true);
-      this.playSong(this.musicList[0], 0);
-    });
 
     this.audioBox = this.$refs["audiobox"];
 
-    var audio = this.audioBox;
+    let audio = this.audioBox;
 
     // Event canplay
     audio.addEventListener(
       "canplay",
       () => {
-        this.isCanPlay = true;
+        this.changeCanPlayStatus(true);
         if (this.isPlay) {
           this.startPlay();
         } else {
@@ -438,6 +420,16 @@ body {
   overflow-y: auto;
   padding: 10px 15px;
   box-sizing: border-box;
+}
+.popup-song-top {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  background-color: inherit;
+}
+.popup-song-detail {
+  margin: 40px 0 0 0;
 }
 .song_data {
   padding: 5px 0;

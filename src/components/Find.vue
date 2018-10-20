@@ -98,7 +98,6 @@ export default {
       var that = this;
 
       if (sessionStorage.getItem("playlist-" + id) == null) {
-        console.log("在线获取歌单");
         that.$http
           .get(that.$api.getPlayListDetail(id))
           .then(res => {
@@ -117,7 +116,6 @@ export default {
             console.error("Error: " + err);
           });
       } else {
-        console.log("本地获取歌单");
         that.p_playList = JSON.parse(sessionStorage.getItem("playlist-" + id));
         that.p_songList = that.p_playList.tracks;
         // push data in musiclist

@@ -16,7 +16,7 @@
             </div>
             <div class="listbox" id="listBOX">
                 <div class="playbar">
-                    <mu-icon-button icon="play_circle_outline" size="30" class="l-no play_btn" v-on:click="playAllFromFirst"></mu-icon-button>
+                    <mu-icon-button icon="play_circle_outline" size="30" class="l-no play_btn" v-on:click="playAllMusic"></mu-icon-button>
                     <div class="r-item play_text">
                         <p>播放全部<span class="text_count">（共{{songList.length}}首）</span></p>
                     </div> 
@@ -38,6 +38,8 @@
     </div>
 </template>
 <script>
+import {mapMutations} from "vuex";
+
 export default {
   props: ["playList", "songList", "curMusic"],
   data() {
@@ -46,6 +48,10 @@ export default {
     };
   },
   methods: {
+    ...mapMutations([
+      "playAllMusic",
+      "changePlayIndex"
+    ]),
     closeList() {
       this.$emit("close-list");
     },
@@ -55,11 +61,8 @@ export default {
       // save cursong data
       sessionStorage.setItem("curSong", JSON.stringify(item));
       // emit parent play current music
-      bus.$emit("curmusicchange", index);
+      this.changePlayIndex(index);
     },
-    playAllFromFirst() {
-      bus.$emit("play-all");
-    }
   },
   mounted() {
     var that = this;
@@ -71,6 +74,7 @@ export default {
       parseInt(getComputedStyle(appbar, null)["height"]);
 
     bus.$on("playlistchange", function(song) {
+      console.log(song)
       that.curSong.id = song.id;
     });
 

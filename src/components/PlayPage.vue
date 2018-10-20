@@ -3,30 +3,30 @@
         <div class="headbar">
             <mu-icon-button class="backbtn" icon="arrow_back" slot="left" v-on:click="closeBox" />
             <div class="info">
-                <p class="sing">{{curMusic.sing}}</p>
-                <p class="singer">{{curMusic.singer|combineName}}</p>
+                <p class="sing">{{curPlaySong.sing}}</p>
+                <p class="singer">{{curPlaySong.singer|combineName}}</p>
             </div>
             <div class="line"></div>
         </div>
-        <div class="page_bg" v-bind:style="{'background-image':'url('+curMusic.posterUrl+')'}"></div> <!-- curMusic.posterUrl -->
+        <div class="page_bg" v-bind:style="{'background-image':'url('+curPlaySong.posterUrl+')'}"></div> <!-- curPlaySong.posterUrl -->
         <div class="cd">
             <div class="discbox" ref="musicDisc">
                 <div class="disc_circle_outter"></div>
                 <div class="disc_circle_inner">
                     <div class="cd_center"></div>
                 </div>
-                <div class="disc_img" v-bind:style="{'background-image':'url('+curMusic.posterUrl+')'}"></div>
+                <div class="disc_img" v-bind:style="{'background-image':'url('+curPlaySong.posterUrl+')'}"></div>
             </div>
-            <div class="swith" v-bind:class="{running:isPlaySong}"></div>
+            <div class="swith" v-bind:class="{running:isPlay}"></div>
         </div>
         <div class="btngroup">
-            <mu-icon-button v-if="curPlayMode==0" class="" icon="repeat" v-on:click.stop="changePlaySongMode" />
-            <mu-icon-button v-if="curPlayMode==1" class="" icon="repeat_one" v-on:click.stop="changePlaySongMode" />
-            <mu-icon-button v-if="curPlayMode==2"  class="" icon="shuffle" v-on:click.stop="changePlaySongMode" />
-            <mu-icon-button iconClass="btn" icon="skip_previous" v-on:click.stop="playNextOrPrev(-1)" />
-            <mu-icon-button iconClass="btn play" icon="play_circle_outline" v-if="!isPlaySong" v-on:click.stop="playMusic(true)" />
-            <mu-icon-button iconClass="btn play" icon="pause_circle_outline" v-if="isPlaySong" v-on:click.stop="playMusic(false)" />
-            <mu-icon-button iconClass="btn" icon="skip_next" v-on:click.stop="playNextOrPrev(1)" />
+            <mu-icon-button v-if="curPlayMode==0" class="" icon="repeat" v-on:click.stop="changePlayMode" />
+            <mu-icon-button v-if="curPlayMode==1" class="" icon="repeat_one" v-on:click.stop="changePlayMode" />
+            <mu-icon-button v-if="curPlayMode==2"  class="" icon="shuffle" v-on:click.stop="changePlayMode" />
+            <mu-icon-button iconClass="btn" icon="skip_previous" v-on:click.stop="switchNextSong(-1)" />
+            <mu-icon-button iconClass="btn play" icon="play_circle_outline" v-if="!isPlay" v-on:click.stop="playMusic(true)" />
+            <mu-icon-button iconClass="btn play" icon="pause_circle_outline" v-if="isPlay" v-on:click.stop="playMusic(false)" />
+            <mu-icon-button iconClass="btn" icon="skip_next" v-on:click.stop="switchNextSong(1)" />
             <mu-icon-button iconClass="btn" icon="list" v-on:click.stop="$emit('open-popbox')" />                        
         </div>
     </div>
@@ -36,34 +36,29 @@ import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "play-page",
-  props: ["curSong", "isPlaySong", "isCanPlaySong"],
   data: function() {
     return {
       musicDisc: null,
-      curMusic: this.curSong,
       // temp
       tempURL: "../static/1.png"
     };
   },
   computed: {
-    ...mapState(["curPlayMode"])
+    ...mapState(["isPlay", "isCanPlay", "curPlayMode", "curPlaySong"])
   },
   watch: {
-    curSong: function(val, oldVal) {
-      this.curMusic = val;
-    },
-    isPlaySong: function(val, oldVal) {
+    isPlay: function(val, oldVal) {
       this.rotateDisc(val);
     }
   },
   methods: {
+    ...mapMutations(["changePlayStatus","changePlayMode","switchNextSong","openOrCloseMusicBox"]),
     closeBox: function() {
-      var that = this;
-      that.$emit("close-box");
+      this.openOrCloseMusicBox(false);
     },
     playMusic: function(boo) {
-      if (this.isCanPlaySong) {
-        this.$emit("change-status", boo);
+      if (this.isCanPlay) {
+        this.changePlayStatus(boo);
       }
     },
     rotateDisc: function(boo) {
@@ -72,17 +67,11 @@ export default {
         ? "running"
         : "paused";
     },
-    playNextOrPrev: function(flag) {
-      bus.$emit("play-next-music", flag);
-    },
-    changePlaySongMode: function() {
-      bus.$emit("change-play-mode");
-    }
   },
   mounted: function() {
     var that = this;
     that.musicDisc = that.$refs["musicDisc"];
-    that.rotateDisc(that.isPlaySong);
+    that.rotateDisc(that.isPlay);
   }
 };
 </script>

@@ -81,7 +81,7 @@ export default {
             // emit parent play current music
             bus.$emit("curmusicchange", index);
           } else {
-            console.log("获取歌曲详情失败");
+            console.error("获取歌曲详情失败");
           }
         })
         .catch(err => {
