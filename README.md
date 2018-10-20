@@ -21,9 +21,10 @@ This is a music player
 `Muse-UI`  
 `vue-awesome-swiper`  
 
-### API server
+### API service
 
-由[网易云音乐 Node.js API service](https://github.com/Binaryify/NeteaseCloudMusicApi)提供
+由[网易云音乐 Node.js API service](https://github.com/Binaryify/NeteaseCloudMusicApi)提供  
+version: 3.0
 
 ### Run
 
