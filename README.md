@@ -15,11 +15,12 @@ This is a music player
 
 ### Technology stack
 
-`Vue`  
-`Vue-router`  
-`axios`  
-`Muse-UI`  
-`vue-awesome-swiper`  
+`Vue`    
+`Vue-router`       
+`Vuex`   
+`axios`    
+`Muse-UI`    
+`vue-awesome-swiper`    
 
 ### API service
 
