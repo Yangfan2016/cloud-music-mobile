@@ -6,25 +6,25 @@
             </mu-appbar>
             <div class="coverbox">
                 <div class="cover_user">
-                    <div class="user_pic"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:auto;"></div>
+                    <div class="user_pic"><img v-bind:src="curPlaylist.coverImgUrl" alt="" style="width:100%;height:auto;"></div>
                     <div class="user_info">
-                        <div v-text="playList.name"></div>
-                        <div v-text="playList.creator && playList.creator.nickname"></div>
+                        <div v-text="curPlaylist.name"></div>
+                        <div v-text="curPlaylist.creator && curPlaylist.creator.nickname"></div>
                     </div>
                 </div>
-                <div class="cover_bg"><img v-bind:src="playList.coverImgUrl" alt="" style="width:100%;height:100%;"></div>
+                <div class="cover_bg"><img v-bind:src="curPlaylist.coverImgUrl" alt="" style="width:100%;height:100%;"></div>
             </div>
             <div class="listbox" id="listBOX">
                 <div class="playbar">
                     <mu-icon-button icon="play_circle_outline" size="30" class="l-no play_btn" v-on:click="playAllMusic"></mu-icon-button>
                     <div class="r-item play_text">
-                        <p>播放全部<span class="text_count">（共{{songList.length}}首）</span></p>
+                        <p>播放全部<span class="text_count">（共{{musicList.length}}首）</span></p>
                     </div> 
                 </div>
                 <ul class="songlist">
-                    <li class="listitem" v-bind:class="{active:item.id==curSong.id}" v-for="(item,index) in songList" v-bind:key="index">
+                    <li class="listitem" v-bind:class="{active:item.id==curPlaySong.id}" v-for="(item,index) in musicList" v-bind:key="index">
                         <div class="l-no">
-                            <mu-icon-button v-if="item.id==curSong.id" icon="volume_up" />
+                            <mu-icon-button v-if="item.id==curPlaySong.id" icon="volume_up" />
                             <span v-else v-text="index+1"></span>
                         </div>
                         <div class="r-item" v-on:click.stop="playSong(item,index)">
@@ -38,34 +38,34 @@
     </div>
 </template>
 <script>
-import {mapMutations} from "vuex";
+import { mapState, mapMutations } from "vuex";
 
 export default {
-  props: ["playList", "songList", "curMusic"],
   data() {
     return {
-      curSong: this.curMusic
+      
     };
   },
+  computed: {
+    ...mapState(["curPlaySong","curPlaylist","musicList"])
+  },
   methods: {
-    ...mapMutations([
-      "playAllMusic",
-      "changePlayIndex"
-    ]),
+    ...mapMutations(["playAllMusic", "changePlayIndex","refreshCurSongDetail"]),
     closeList() {
       this.$emit("close-list");
     },
     playSong(item, index) {
-      this.curSong = { id: item.id };
+      this.refreshCurSongDetail({
+         id: item.id,
+      });
       item._index = index;
       // save cursong data
       sessionStorage.setItem("curSong", JSON.stringify(item));
       // emit parent play current music
       this.changePlayIndex(index);
-    },
+    }
   },
   mounted() {
-    var that = this;
     var detailPage = document.getElementById("detailPage");
     var appbar = document.getElementById("appbar");
     var listBOX = document.getElementById("listBOX");
@@ -73,15 +73,10 @@ export default {
       listBOX.getBoundingClientRect().top -
       parseInt(getComputedStyle(appbar, null)["height"]);
 
-    bus.$on("playlistchange", function(song) {
-      console.log(song)
-      that.curSong.id = song.id;
-    });
-
     // BUG
     detailPage.addEventListener(
       "scroll",
-      function() {
+      e=> {
         if (detailPage.scrollTop >= top) {
           appbar.style.backgroundColor = "rgb(150, 10, 10)";
         } else {

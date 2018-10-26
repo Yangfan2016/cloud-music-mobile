@@ -55,5 +55,4 @@ $ yarn serve
 - Enjoy hacking <3
 
 ---
-![docor]()
 built upon love by [docor](https://github.com/turingou/docor.git) v0.3.0

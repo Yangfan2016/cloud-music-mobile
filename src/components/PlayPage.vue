@@ -23,10 +23,10 @@
             <mu-icon-button v-if="curPlayMode==0" class="" icon="repeat" v-on:click.stop="changePlayMode" />
             <mu-icon-button v-if="curPlayMode==1" class="" icon="repeat_one" v-on:click.stop="changePlayMode" />
             <mu-icon-button v-if="curPlayMode==2"  class="" icon="shuffle" v-on:click.stop="changePlayMode" />
-            <mu-icon-button iconClass="btn" icon="skip_previous" v-on:click.stop="switchNextSong(-1)" />
+            <mu-icon-button iconClass="btn" icon="skip_previous" v-on:click.stop="playNextSong(-1)" />
             <mu-icon-button iconClass="btn play" icon="play_circle_outline" v-if="!isPlay" v-on:click.stop="playMusic(true)" />
             <mu-icon-button iconClass="btn play" icon="pause_circle_outline" v-if="isPlay" v-on:click.stop="playMusic(false)" />
-            <mu-icon-button iconClass="btn" icon="skip_next" v-on:click.stop="switchNextSong(1)" />
+            <mu-icon-button iconClass="btn" icon="skip_next" v-on:click.stop="playNextSong(1)" />
             <mu-icon-button iconClass="btn" icon="list" v-on:click.stop="$emit('open-popbox')" />                        
         </div>
     </div>
@@ -36,7 +36,7 @@ import { mapState, mapMutations } from "vuex";
 
 export default {
   name: "play-page",
-  data: function() {
+  data() {
     return {
       musicDisc: null,
       // temp
@@ -47,31 +47,32 @@ export default {
     ...mapState(["isPlay", "isCanPlay", "curPlayMode", "curPlaySong"])
   },
   watch: {
-    isPlay: function(val, oldVal) {
+    isPlay(val, oldVal) {
       this.rotateDisc(val);
     }
   },
   methods: {
-    ...mapMutations(["changePlayStatus","changePlayMode","switchNextSong","openOrCloseMusicBox"]),
-    closeBox: function() {
+    ...mapMutations(["changePlayStatus","changePlayMode","openOrCloseMusicBox"]),
+    playNextSong(flag){
+      this.$emit('change-song',flag);
+    },
+    closeBox() {
       this.openOrCloseMusicBox(false);
     },
-    playMusic: function(boo) {
+    playMusic(boo) {
       if (this.isCanPlay) {
         this.changePlayStatus(boo);
       }
     },
-    rotateDisc: function(boo) {
-      var that = this;
-      that.musicDisc.style.webkitAnimationPlayState = boo
+    rotateDisc(boo) {    
+      this.musicDisc.style.webkitAnimationPlayState = boo
         ? "running"
         : "paused";
     },
   },
-  mounted: function() {
-    var that = this;
-    that.musicDisc = that.$refs["musicDisc"];
-    that.rotateDisc(that.isPlay);
+  mounted() {
+    this.musicDisc = this.$refs["musicDisc"];
+    this.rotateDisc(this.isPlay);
   }
 };
 </script>

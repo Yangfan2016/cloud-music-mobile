@@ -1,21 +1,14 @@
-.DS_Store
+.DS_*
+*.log
+logs
+**/*.backup.*
+**/*.back.*
+
 node_modules
-/dist
+bower_componets
 
-# local env files
-.env.local
-.env.*.local
+*.sublime*
 
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw*
+psd
+thumb
+sketch

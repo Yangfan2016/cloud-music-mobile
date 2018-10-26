@@ -10,9 +10,7 @@
 		</mu-appbar>
 		<!-- router -->
 		<transition name="slide-left" mode="out-in">
-			<router-view class="view" v-on:push-list="addMusicList" v-bind="{
-				curSong:curPlaySong
-			}"></router-view>      
+			<router-view class="view"></router-view>      
 		</transition>
 		<!-- 播放条 -->
 		<div class="musicbar" v-if="isShowMusicBar" v-on:click="openOrCloseMusicBox(true)">
@@ -35,7 +33,8 @@
 		<transition name="slideVertical">
 			<play-page 
         v-show="isOpenMusicPage"
-        v-on:open-popbox="openPlayListBox"></play-page>
+        v-on:open-popbox="openPlayListBox"
+        v-on:change-song='playNextOrPrevSong'></play-page>
 		</transition>
 		<!-- 歌单列表 -->
 		<mu-popup position="bottom" v-bind:overlay="true" popupClass="popup-bottom-playlist" v-bind:open="isOpenPlayListBox" v-on:close="openOrClosePlayListBox(false)">
@@ -73,9 +72,7 @@ export default {
       isShowMusicBar: false,
       isOpenSearchPage: false,
       isLoad: false,
-      audioBox: null,
-      curPlaylist: {}, // 当前播放列表
-      musicList: [] // 播放列表
+      audioBox: null
     };
   },
   computed: {
@@ -88,6 +85,8 @@ export default {
       "curPlayMode",
       "curPlaySong",
       "curPlayIndex",
+      "curPlaylist",
+      "musicList",
       "nextSong"
     ])
   },
@@ -104,9 +103,6 @@ export default {
     curPlayIndex(n) {
       this.playThisSong(n);
     },
-    nextSong(flag) {
-      this.playNextOrPrevSong(flag);
-    }
   },
   methods: {
     ...mapMutations([
@@ -115,7 +111,10 @@ export default {
       "changePlayMode",
       "changePlayStatus",
       "changeCanPlayStatus",
-      "refreshCurSongDetail"
+      "refreshCurSongDetail",
+      "refreshCurListDetail",
+      "pushToMusicQueue",
+      "setToMusicQueue"
     ]),
     handleTabChange(val) {
       this.activeTab = val;
@@ -151,28 +150,28 @@ export default {
       // play this song
       this.playThisSong();
       // emit change curmusic data
-      bus.$emit("playlistchange", song);
+      this.refreshCurSongDetail(song);
     },
     playThisSong() {
       let curSong = JSON.parse(sessionStorage.getItem("curSong"));
 
-      // Don't repeat play music
-      if (curSong.id == this.curPlaySong.id) {
-        // if play return
-        if (this.isPlay) {
-          return false;
-        }
-        // if playstatus is paused let it play
-        if (!this.isPlay && this.musicList.length > 0) {
-          this.startPlay();
-          return false;
-        }
-      }
+      // // Don't repeat play music BUG
+      // if (curSong.id == this.curPlaySong.id) {
+      //   // if play return
+      //   if (this.isPlay) {
+      //     return false;
+      //   }
+      //   // if playstatus is paused let it play
+      //   if (!this.isPlay && this.musicList.length > 0) {
+      //     this.startPlay();
+      //     return false;
+      //   }
+      // }
       // show music bottom bar
       this.isShowMusicBar = true;
       // push playlist to musiclist
       let playlist = sessionStorage.getItem("playlist-" + this.curPlaylist.id);
-      playlist && this.addMusicList(JSON.parse(playlist));
+      playlist && this.refreshCurListDetail(JSON.parse(playlist));
       // init
       this.changeCanPlayStatus(false);
       // save cur music data
@@ -240,18 +239,16 @@ export default {
       this.changePlayStatus(false);
       this.audioBox.pause();
     },
-    addMusicList(playlist) {
-      this.curPlaylist.id = playlist.id;
-      playlist.tracks && (this.musicList = playlist.tracks);
-    },
     clearMusicList() {
       this.isShowMusicBar = false;
       this.openOrClosePlayListBox(false);
       this.openOrCloseMusicBox(false);
-      this.musicList = [];
+      this.setToMusicQueue([]);
       this.stopPlay();
       // remove highlight
-      bus.$emit("playlistchange", { id: -1 });
+      this.refreshCurSongDetail({
+        id: -1
+      });
     },
     // 顺序播放
     playByAesOrder(flag) {
@@ -259,7 +256,8 @@ export default {
       let eq = this.curPlaySong.eq;
 
       flag == -1 ? eq-- : eq++;
-      return (eq = ((eq % songLen) + songLen) % songLen);
+      eq = ((eq % songLen) + songLen) % songLen;
+      return eq;
     },
     // 随机播放
     playByRanOrder() {
@@ -294,11 +292,10 @@ export default {
     },
     // 加入播放列表
     pushCurPlayList(song) {
-      this.musicList.push(song);
+      this.pushToMusicQueue(song);
     }
   },
   mounted() {
-
     this.audioBox = this.$refs["audiobox"];
 
     let audio = this.audioBox;

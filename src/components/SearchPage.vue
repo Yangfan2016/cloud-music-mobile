@@ -18,6 +18,8 @@
     </div>
 </template>
 <script>
+import { mapState, mapMutations } from "vuex";
+
 export default {
   name: "search-page",
   data() {
@@ -28,6 +30,7 @@ export default {
     };
   },
   methods: {
+    ...mapMutations(["pushToMusicQueue","changePlayIndex"]),
     clearAndReset() {
       this.keywords = "";
       this.resultList = [];
@@ -72,14 +75,14 @@ export default {
             // openPlayPage
             this.$emit("open-play");
             // push song to curPlaylist
-            this.$emit("push-list", song);
+            this.pushToMusicQueue(song);
 
             this.curSong = { id: song.id };
             song._index = index;
             // save cursong data
             sessionStorage.setItem("curSong", JSON.stringify(song));
             // emit parent play current music
-            bus.$emit("curmusicchange", index);
+            this.changePlayIndex(index);
           } else {
             console.error("获取歌曲详情失败");
           }

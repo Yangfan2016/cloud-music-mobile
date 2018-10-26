@@ -19,7 +19,7 @@
                 <div class="playlist clearfix">
                     <!-- loading -->
                     <mu-circular-progress class="center" :size="40" :strokeWidth="3" color="#f20" v-show="isLoading" />
-                    <div class="playlist_item" v-for="playlist in playlistArr" v-bind:key="playlist.id" v-on:click="openSingList(playlist.id)">  
+                    <div class="playlist_item" v-if="playlistArr.length>0" v-for="playlist in playlistArr" v-bind:key="playlist.id" v-on:click="openSingList(playlist.id)">  
                         <img v-bind:src="playlist.coverImgUrl" alt="" style="width:100%;height:auto;" />
                         <div class="playlist-title" v-text="playlist.name"></div>
                     </div>
@@ -41,26 +41,21 @@
         
         <!-- 歌单详情页 -->
         <transition name="slide-left">
-            <sing-list v-show="isOpenSingList" v-bind="{
-                playList:p_playList,
-                songList:p_songList,
-                curMusic:curSong
-            }" v-on:close-list="closeSingList"></sing-list>
+            <sing-list v-show="isOpenSingList" v-on:close-list="closeSingList"></sing-list>
         </transition>
 	</div>
 </template>
 <script type="text/javascript">
 import Swiper from "../plugins/Swiper";
 import DetailPlaylist from "./DetailPlaylist.vue";
+import { mapState, mapMutations } from "vuex";
+
 export default {
-  props: ["curSong"],
-  data: function() {
+  data(){
     return {
       activeTab: "tab1",
       bannerImgList: [],
       playlistArr: [],
-      p_playList: {},
-      p_songList: [],
       refreshing: false,
       trigger: null,
       isLoading: false,
@@ -68,11 +63,15 @@ export default {
       isOpenSingList: false
     };
   },
+  computed:{
+    ...mapState(["curPlaylist"])
+  },
   methods: {
-    handleTabChange: function(val) {
+    ...mapMutations(["refreshCurListDetail"]),
+    handleTabChange(val) {
       this.activeTab = val;
     },
-    getHotPlayList: function() {
+    getHotPlayList() {
       this.isLoading = true;
       this.$http
         .get(
@@ -94,50 +93,44 @@ export default {
           this.isLoading = false;
         });
     },
-    getDetailPlayList: function(id) {
-      var that = this;
+    getDetailPlayList(id) {
 
       if (sessionStorage.getItem("playlist-" + id) == null) {
-        that.$http
-          .get(that.$api.getPlayListDetail(id))
+        this.$http
+          .get(this.$api.getPlayListDetail(id))
           .then(res => {
             let data = res.data;
-            that.p_playList = data.playlist;
-            that.p_songList = that.p_playList.tracks;
             // save
             sessionStorage.setItem(
               "playlist-" + id,
               JSON.stringify(data.playlist)
             );
             // push data in musiclist
-            that.$emit("push-list", data.playlist);
+            this.refreshCurListDetail(data.playlist);
           })
           .catch(err => {
             console.error("Error: " + err);
           });
       } else {
-        that.p_playList = JSON.parse(sessionStorage.getItem("playlist-" + id));
-        that.p_songList = that.p_playList.tracks;
+        let list = JSON.parse(sessionStorage.getItem("playlist-" + id));
         // push data in musiclist
-        that.$emit("push-list", that.p_playList);
+        this.refreshCurListDetail(list);
       }
     },
-    openSingList: function(id) {
-      var that = this;
-      that.isOpenSingList = true;
-      that.getDetailPlayList(id);
+    openSingList(id) {
+      this.isOpenSingList = true;
+      this.getDetailPlayList(id);
     },
-    closeSingList: function() {
-      var that = this;
-      that.isOpenSingList = false;
+    closeSingList() {
+      this.isOpenSingList = false;
     },
-    refresh: function() {
+    refresh() {
       this.refreshing = true;
       setTimeout(() => {
         this.getHotPlayList();
       }, 300);
     },
-    close: function() {
+    close() {
       this.isOpen = false;
     }
   },
@@ -145,10 +138,9 @@ export default {
     "swiper-box": Swiper,
     "sing-list": DetailPlaylist
   },
-  mounted: function() {
-    var that = this;
+  mounted() {
     this.$nextTick(() => {
-      that.trigger=that.$refs["findIndex"];
+      this.trigger=this.$refs["findIndex"];
       this.getHotPlayList();
     });
 

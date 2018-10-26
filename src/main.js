@@ -27,9 +27,6 @@ Vue.use(VueAwesomeSwiper); // 加载 VueAwesomeSwiper轮播图插件
 Vue.prototype.$http = axios;
 Vue.prototype.$api = api;
 
-// Event bus
-window.bus = new Vue();
-
 // filter
 Vue.filter("combineName", function (val) {
 	if (!val || val.length === 0) return 'null';
