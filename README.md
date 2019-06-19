@@ -27,22 +27,43 @@ This is a music player
 由[网易云音乐 Node.js API service](https://github.com/Binaryify/NeteaseCloudMusicApi)提供  
 version: 3.0
 
+### Install
+
+```bash
+
+# 安装项目依赖
+$ yarn
+
+# 获取子项目
+$ git submodule init
+$ git submodule update
+
+# 安装子项目的依赖
+$ cd NeteaseCloudMusicApi
+$ yarn
+$ cd ../
+
+```
+
 ### Run
 
-- 后台
 ```bash
-$ git clone git@github.com:Binaryify/NeteaseCloudMusicApi.git
 
-$ yarn 
-$ node app.js
+# 启动 api 服务
+$ yarn sever
+# 启动前台服务
+$ yarn start
 
 ```
-- 前台
+
+### Build
 
 ```bash
-$ yarn
-$ yarn serve
+# 打包
+$ yarn build
+
 ```
+
 
 ### Contributing
 - Fork this Repo first
